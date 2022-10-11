@@ -37,8 +37,8 @@ var BuildResPath = /** @class */ (function () {
                 else
                     return;
             }
-            temp = "\t".concat((0, Utils_1.UpperFirst)(dirName.replace("res/", ""), ["/"]) + tempName, " = \"").concat(dirName + fileName, "\",\n");
-            isUI && (temp += "\t".concat(fileName, " = \"").concat(fileName, "\",\n"));
+            isUI && (temp = "\t".concat(fileName, " = \"").concat(fileName, "\",\n"));
+            temp += "\t".concat((0, Utils_1.UpperFirst)(dirName.replace("res/", ""), ["/"]) + tempName, " = \"").concat(dirName + fileName, "\",\n");
             content += temp;
         });
         dirs.forEach(function (fileName) {

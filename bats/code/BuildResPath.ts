@@ -33,8 +33,8 @@ export default class BuildResPath {
                 if (fileName.endsWith(".zip")) fileName = tempName;
                 else return;
             }
-            temp = `\t${UpperFirst(dirName.replace("res/", ""), ["/"]) + tempName} = "${dirName + fileName}",\n`;
-            isUI && (temp += `\t${fileName} = "${fileName}",\n`);
+            isUI && (temp = `\t${fileName} = "${fileName}",\n`);
+            temp += `\t${UpperFirst(dirName.replace("res/", ""), ["/"]) + tempName} = "${dirName + fileName}",\n`;
             content += temp;
         });
         dirs.forEach(fileName => {
