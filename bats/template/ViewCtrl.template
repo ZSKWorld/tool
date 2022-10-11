@@ -1,0 +1,27 @@
+import { BaseViewCtrl } from "#hasSubDir#../../core/BaseViewCtrl";
+import { #viewMsg#, #viewClass# } from "#hasSubDir#../../view/#packageName#/#subDir##viewClass#";
+
+export interface #dataName# {
+
+}
+
+export class #className# extends BaseViewCtrl<#viewClass#, #dataName#>{
+
+    override onAwake(): void {
+#btnMessage#
+    }
+
+    override onEnable(): void {
+        
+    }
+
+    override onDisable(): void {
+        
+    }
+
+    override onDestroy(): void {
+        
+    }
+
+#btnFunctions#
+}

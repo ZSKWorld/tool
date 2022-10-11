@@ -1,0 +1,6 @@
+import { BaseNetProcessor } from "#hasSubDir#../../core/BaseNetProcessor";
+import { #viewCtrl# } from "#viewCtrlPath#";
+
+export class #processorName# extends BaseNetProcessor<#viewCtrl#>{
+    
+}

@@ -1,0 +1,16 @@
+import { ExtensionClass } from "#subDir#../../../libs/utils/Util";
+import { ViewExtension } from "#subDir#../../core/Interfaces";
+import #fileName# from "#subDir#../../ui/#packageName#/#fileName#";
+#imports#
+export const enum #fileName#Msg {
+#messages#
+}
+
+export class #className# extends ExtensionClass<ViewExtension, #fileName#>(#fileName#) {
+    static PkgRes = ResPath.Ui_#packageName#;
+
+	override onCreate(): void {
+        #allComp##compExtension#
+    }
+
+}
