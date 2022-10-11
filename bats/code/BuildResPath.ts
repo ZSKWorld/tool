@@ -6,14 +6,15 @@ import { UpperFirst } from "./Utils";
 export default class BuildResPath {
     constructor() {
         let content = this.buildOther(ResDir, "res/");
-        content = `${MODIFY_TIP}export const enum ResPath{${content}}`;
+        content = `${ MODIFY_TIP }export const enum ResPath{${ content }}`;
         // console.log(content);
         writeFileSync(ResPathPath, content);
     }
 
     private buildOther(dirPath: string, dirName: string, baseContent?: string) {
         let content = baseContent || "";
-        let isUI = dirName.startsWith("res/ui/");
+        const isUI = dirName.startsWith("res/ui/");
+        const isFont = dirName.startsWith("res/font/");
         let allFiles = readdirSync(dirPath);
         let dirs: string[] = [];
         let files: string[] = [];
@@ -27,20 +28,21 @@ export default class BuildResPath {
             }
         });
         files.forEach(fileName => {
-            let tempName = fileName.split(".")[0];
+            let tempName = fileName.split(".")[ 0 ];
             let temp: string = "";
             if (isUI) {
                 if (fileName.endsWith(".zip")) fileName = tempName;
                 else return;
             }
-            isUI && (temp = `\t${fileName} = "${fileName}",\n`);
-            temp += `\t${UpperFirst(dirName.replace("res/", ""), ["/"]) + tempName} = "${dirName + fileName}",\n`;
+            if (isFont) fileName = tempName;
+            if (isUI || isFont) temp = `\t${ fileName } = "${ fileName }",\n`;
+            temp += `\t${ UpperFirst(dirName.replace("res/", ""), [ "/" ]) + tempName } = "${ dirName + fileName }",\n`;
             content += temp;
         });
         dirs.forEach(fileName => {
             const filePath = path.resolve(dirPath, fileName);
             let subDir = dirName + fileName + "/";
-            content = this.buildOther(filePath, subDir, content + `\n\t// ${subDir}\n`);
+            content = this.buildOther(filePath, subDir, content + `\n\t// ${ subDir }\n`);
         });
         // allFiles.forEach(fileName => {
         //     const filePath = path.resolve(dirPath, fileName);

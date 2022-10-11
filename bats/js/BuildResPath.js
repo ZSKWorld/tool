@@ -15,6 +15,7 @@ var BuildResPath = /** @class */ (function () {
         var _this = this;
         var content = baseContent || "";
         var isUI = dirName.startsWith("res/ui/");
+        var isFont = dirName.startsWith("res/font/");
         var allFiles = (0, fs_1.readdirSync)(dirPath);
         var dirs = [];
         var files = [];
@@ -37,7 +38,10 @@ var BuildResPath = /** @class */ (function () {
                 else
                     return;
             }
-            isUI && (temp = "\t".concat(fileName, " = \"").concat(fileName, "\",\n"));
+            if (isFont)
+                fileName = tempName;
+            if (isUI || isFont)
+                temp = "\t".concat(fileName, " = \"").concat(fileName, "\",\n");
             temp += "\t".concat((0, Utils_1.UpperFirst)(dirName.replace("res/", ""), ["/"]) + tempName, " = \"").concat(dirName + fileName, "\",\n");
             content += temp;
         });
