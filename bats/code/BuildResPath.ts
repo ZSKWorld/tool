@@ -30,12 +30,9 @@ export default class BuildResPath {
         files.forEach(fileName => {
             let tempName = fileName.split(".")[ 0 ];
             let temp: string = "";
-            if (isUI) {
-                if (fileName.endsWith(".zip")) fileName = tempName;
-                else return;
-            }
-            if (isFont) fileName = tempName;
-            if (isUI || isFont) temp = `\t${ fileName } = "${ fileName }",\n`;
+            if (isUI && !fileName.endsWith(".zip")) return;
+            if (isUI) fileName = tempName;
+            if (isUI || isFont) temp = `\t${ tempName } = "${ tempName }",\n`;
             temp += `\t${ UpperFirst(dirName.replace("res/", ""), [ "/" ]) + tempName } = "${ dirName + fileName }",\n`;
             content += temp;
         });

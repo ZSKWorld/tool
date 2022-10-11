@@ -32,16 +32,12 @@ var BuildResPath = /** @class */ (function () {
         files.forEach(function (fileName) {
             var tempName = fileName.split(".")[0];
             var temp = "";
-            if (isUI) {
-                if (fileName.endsWith(".zip"))
-                    fileName = tempName;
-                else
-                    return;
-            }
-            if (isFont)
+            if (isUI && !fileName.endsWith(".zip"))
+                return;
+            if (isUI)
                 fileName = tempName;
             if (isUI || isFont)
-                temp = "\t".concat(fileName, " = \"").concat(fileName, "\",\n");
+                temp = "\t".concat(tempName, " = \"").concat(tempName, "\",\n");
             temp += "\t".concat((0, Utils_1.UpperFirst)(dirName.replace("res/", ""), ["/"]) + tempName, " = \"").concat(dirName + fileName, "\",\n");
             content += temp;
         });
