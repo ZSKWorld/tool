@@ -30,7 +30,7 @@ export default class BatMain {
         const question = () => {
             rl.question(tip, function (prompt) {
                 let index = +prompt;
-                if (Number.isNaN(index) == false && (index && act[index - 1])) {
+                if (Number.isNaN(index) == false && (index && act[ index - 1 ] || !index)) {
                     index -= 1;
                     const acts: Act[] = [];
                     if (index == -1) acts.push(...act);
@@ -43,9 +43,9 @@ export default class BatMain {
                 } else {
                     console.log(colors.red("错误的选项！"));
                 }
-                // rl.close();
-                // process.exit();
-                question();
+                rl.close();
+                process.exit();
+                // question();
             });
         }
         question();

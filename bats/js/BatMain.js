@@ -25,7 +25,7 @@ var BatMain = /** @class */ (function () {
         var question = function () {
             rl.question(tip, function (prompt) {
                 var index = +prompt;
-                if (Number.isNaN(index) == false && (index && act[index - 1])) {
+                if (Number.isNaN(index) == false && (index && act[index - 1] || !index)) {
                     index -= 1;
                     var acts = [];
                     if (index == -1)
@@ -41,15 +41,12 @@ var BatMain = /** @class */ (function () {
                 else {
                     console.log(colors.red("错误的选项！"));
                 }
-                // rl.close();
-                // process.exit();
-                question();
+                rl.close();
+                process.exit();
+                // question();
             });
         };
-        // question();
-        rl.addListener("line", function (input) {
-            console.log(input);
-        });
+        question();
         //动态require js
         // const util = require("../js/Utils").GetTemplateContent("View");
         //文件名或者目录名
