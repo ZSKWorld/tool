@@ -16,24 +16,39 @@ var BatMain = /** @class */ (function () {
             { desc: "更新网络相关", cls: BuildNet_1["default"] },
             { desc: "用户数据事件", cls: BuildUserDataEvent_1["default"] },
         ];
-        var tip = "选择要进行的操作：\n";
-        act.forEach(function (v, index) { return tip += "".concat(index, ". ").concat(v.desc, "\n"); });
+        var tip = "选择要进行的操作：\n0. 全部执行\n";
+        act.forEach(function (v, index) { return tip += "".concat(index + 1, ". ").concat(v.desc, "\n"); });
         var rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
         });
-        rl.question(tip, function (prompt) {
-            var index = +prompt;
-            if (Number.isNaN(index) == false && act[index]) {
-                console.log(colors.yellow("执行中..."));
-                new (act[index].cls)();
-                console.log(colors.green("执行完毕！！！"));
-            }
-            else {
-                console.log(colors.red("错误的选项！"));
-            }
-            rl.close();
-            process.exit();
+        var question = function () {
+            rl.question(tip, function (prompt) {
+                var index = +prompt;
+                if (Number.isNaN(index) == false && (index && act[index - 1])) {
+                    index -= 1;
+                    var acts = [];
+                    if (index == -1)
+                        acts.push.apply(acts, act);
+                    else
+                        acts.push(act[index]);
+                    acts.length && acts.forEach(function (v) {
+                        console.log(colors.yellow("正在执行 => " + v.desc));
+                        new v.cls();
+                        console.log(colors.green(v.desc + " => 执行完毕！"));
+                    });
+                }
+                else {
+                    console.log(colors.red("错误的选项！"));
+                }
+                // rl.close();
+                // process.exit();
+                question();
+            });
+        };
+        // question();
+        rl.addListener("line", function (input) {
+            console.log(input);
         });
         //动态require js
         // const util = require("../js/Utils").GetTemplateContent("View");

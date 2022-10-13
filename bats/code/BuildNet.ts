@@ -36,11 +36,10 @@ export default class BuildNet {
             const name = match.substring(0, match.trim().indexOf("("));
             const type = match.substring(match.indexOf("(") + 1, match.indexOf(")")).replace("Input", "Output").split(":")[ 1 ];
             const temp = UpperFirst(name);
-            // data += `\t/**\n\t * @param ${ type ? "{ " + type.trim() + " }" : "无参" }\n\t */\n`;
             data += `\t/** ${ type ? "参数类型：{@link " + type.trim() + "}" : "无参" } */\n`;
             data += `\tResponse_${ temp } = "Response_${ temp }",\n\n`;
         });
-        data = data.trim() + "}";
+        data = data.trim() + "\n}";
         fs.writeFileSync(NetResponsePath, data);
     }
 
