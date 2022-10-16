@@ -73,7 +73,7 @@ var BuildView = /** @class */ (function () {
                     else if (varType.startsWith("Com")) {
                         addViewIDImport_1 = true;
                         !useComps_1.includes("listener") && useComps_1.unshift("listener");
-                        compExtension_1 += "\n\t\tthis.initView(ViewID.".concat(varType, "View, ").concat(varName, ", listener);");
+                        compExtension_1 += "\n\t\tthis.initView(".concat(varName, ", listener);");
                     }
                     else
                         return;

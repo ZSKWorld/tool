@@ -74,7 +74,7 @@ export default class BuildView {
                     } else if (varType.startsWith("Com")) {
                         addViewIDImport = true;
                         !useComps.includes("listener") && useComps.unshift("listener");
-                        compExtension += `\n\t\tthis.initView(ViewID.${ varType }View, ${ varName }, listener);`;
+                        compExtension += `\n\t\tthis.initView(${ varName }, listener);`;
                     } else return;
                     useComps.push(varName);
                 });
