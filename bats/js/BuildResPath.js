@@ -6,12 +6,11 @@ var Const_1 = require("./Const");
 var Utils_1 = require("./Utils");
 var BuildResPath = /** @class */ (function () {
     function BuildResPath() {
-        var content = this.buildOther(Const_1.ResDir, "res/");
-        content = "".concat(Const_1.MODIFY_TIP, "export const enum ResPath{").concat(content, "}");
-        // console.log(content);
+        var content = this.buildResEnum(Const_1.ResDir, "res/");
+        content = "".concat(Const_1.MODIFY_TIP, "export namespace ResPath {\n").concat(content, "}");
         (0, fs_1.writeFileSync)(Const_1.ResPathPath, content);
     }
-    BuildResPath.prototype.buildOther = function (dirPath, dirName, baseContent) {
+    BuildResPath.prototype.buildResEnum = function (dirPath, dirName, baseContent) {
         var _this = this;
         var content = baseContent || "";
         var isUI = dirName.startsWith("res/ui/");
@@ -29,41 +28,53 @@ var BuildResPath = /** @class */ (function () {
                 files.push(fileName);
             }
         });
-        files.forEach(function (fileName) {
-            var tempName = fileName.split(".")[0];
-            var temp = "";
-            if (isUI && !fileName.endsWith(".zip"))
-                return;
-            if (isUI)
-                fileName = tempName;
-            if (isUI || isFont)
-                temp = "\t".concat(tempName, " = \"").concat(tempName, "\",\n");
-            temp += "\t".concat((0, Utils_1.UpperFirst)(dirName.replace("res/", ""), ["/"]) + tempName, " = \"").concat(dirName + fileName, "\",\n");
-            content += temp;
-        });
+        // files.forEach(fileName => {
+        //     let tempName = fileName.split(".")[ 0 ];
+        //     let temp: string = "";
+        //     if (isUI && fileName.endsWith(".zip") == false) return;
+        //     if (isUI) fileName = tempName;
+        //     if (isUI || isFont) temp = `\t${ tempName } = "${ tempName }",\n`;
+        //     temp += `\t${ UpperFirst(dirName.replace("res/", ""), [ "/" ]) + tempName } = "${ dirName + fileName }",\n`;
+        //     content += temp;
+        // });
+        if (isUI) {
+            content += this.buildEnum("UIName", false, dirName, files, ".zip");
+            content += "\n" + this.buildEnum("UIPath", true, dirName, files, ".zip");
+        }
+        else if (isFont) {
+            content += this.buildEnum("FontName", false, dirName, files);
+            content += "\n" + this.buildEnum("FontPath", true, dirName, files);
+        }
+        else {
+            if (!baseContent)
+                content += this.buildEnum("UnclassifiedPath", true, dirName, files);
+            else {
+                var dirs_1 = dirName.split("/");
+                content += this.buildEnum((0, Utils_1.UpperFirst)(dirs_1[dirs_1.length - 2] + "Path"), true, dirName, files);
+            }
+        }
         dirs.forEach(function (fileName) {
             var filePath = path.resolve(dirPath, fileName);
             var subDir = dirName + fileName + "/";
-            content = _this.buildOther(filePath, subDir, content + "\n\t// ".concat(subDir, "\n"));
+            content = _this.buildResEnum(filePath, subDir, content + "\n\t// ".concat(subDir, "\n"));
         });
-        // allFiles.forEach(fileName => {
-        //     const filePath = path.resolve(dirPath, fileName);
-        //     const info = statSync(filePath);
-        //     if (info.isDirectory()) {
-        //         let subDir = dirName + fileName + "/";
-        //         content = this.buildOther(filePath, subDir, content + `\n\t//${subDir}\n`);
-        //     } else {
-        //         let tempName = fileName.split(".")[0];
-        //         let temp: string = "";
-        //         if (isUI) {
-        //             if (fileName.endsWith(".zip")) fileName = tempName;
-        //             else return;
-        //         }
-        //         temp = `\t${UpperFirst(dirName.replace("res/", ""), ["/"]) + tempName} = "${dirName + fileName}",\n`;
-        //         content += temp;
-        //     }
-        // });
         return content;
+    };
+    BuildResPath.prototype.buildEnum = function (name, path, dir, files, include) {
+        var content = "";
+        files.forEach(function (v) {
+            if (include && v.endsWith(include) == false)
+                return;
+            var fileName = v.split(".")[0];
+            if (path)
+                content += "\n\t\t".concat((0, Utils_1.UpperFirst)(fileName), " = \"").concat(dir + (include ? fileName : v), "\",");
+            else
+                content += "\n\t\t".concat((0, Utils_1.UpperFirst)(fileName), " = \"").concat(fileName, "\",");
+        });
+        if (content)
+            return "\texport const enum ".concat(name, " {").concat(content, "\n\t}\n");
+        else
+            return "\texport const enum ".concat(name, " {}\n");
     };
     return BuildResPath;
 }());

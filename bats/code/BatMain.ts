@@ -30,24 +30,6 @@ export default class BatMain {
         const question = () => {
             rl.question(tip, function (prompt) {
                 let index = +prompt;
-                rl.write("nihao\n");
-                rl.write("nihao\n");
-                    // process.stdout.clearLine(0);
-                    // process.stdout.cursorTo(0, 0);
-                    console.log(process.stdout.columns, process.stdout.rows)
-                // setTimeout(() => {
-                //     process.stdout.clearLine(0);
-                //     process.stdout.cursorTo(0);
-                //     rl.write("nihao.\n");
-                //     setTimeout(() => {
-                //         process.stdout.clearLine(0);
-                //         process.stdout.cursorTo(0);
-                //         rl.write("nihao..\n");
-                //     }, 1000);
-                // }, 1000);
-                // setTimeout(() => {
-                //     process.stdout.clearScreenDown();
-                // }, 1000);
                 if (Number.isNaN(index) == false && (index && act[ index - 1 ] || !index)) {
                     index -= 1;
                     const acts: Act[] = [];
