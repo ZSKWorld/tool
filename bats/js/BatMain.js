@@ -5,7 +5,6 @@ var readline = require("readline");
 var BuildNet_1 = require("./BuildNet");
 var BuildResPath_1 = require("./BuildResPath");
 var BuildTable_1 = require("./BuildTable");
-var BuildUserDataEvent_1 = require("./BuildUserDataEvent");
 var BuildView_1 = require("./BuildView");
 var BatMain = /** @class */ (function () {
     function BatMain() {
@@ -14,7 +13,6 @@ var BatMain = /** @class */ (function () {
             { desc: "导出表配置", cls: BuildTable_1["default"] },
             { desc: "更新资源路径", cls: BuildResPath_1["default"] },
             { desc: "更新网络相关", cls: BuildNet_1["default"] },
-            { desc: "用户数据事件", cls: BuildUserDataEvent_1["default"] },
         ];
         var tip = "选择要进行的操作：\n0. 全部执行\n";
         act.forEach(function (v, index) { return tip += "".concat(index + 1, ". ").concat(v.desc, "\n"); });

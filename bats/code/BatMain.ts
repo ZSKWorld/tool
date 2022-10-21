@@ -3,7 +3,6 @@ import * as readline from "readline";
 import BuildNet from "./BuildNet";
 import BuildResPath from "./BuildResPath";
 import ExportTable from "./BuildTable";
-import BuildUserDataEvent from "./BuildUserDataEvent";
 import BuildView from "./BuildView";
 
 interface Act {
@@ -18,7 +17,6 @@ export default class BatMain {
             { desc: "导出表配置", cls: ExportTable },
             { desc: "更新资源路径", cls: BuildResPath },
             { desc: "更新网络相关", cls: BuildNet },
-            { desc: "用户数据事件", cls: BuildUserDataEvent },
         ];
         let tip = "选择要进行的操作：\n0. 全部执行\n";
         act.forEach((v, index) => tip += `${ index + 1 }. ${ v.desc }\n`);
