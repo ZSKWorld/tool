@@ -1,13 +1,15 @@
 import * as colors from "colors";
 import * as readline from "readline";
+import { BuildBase } from "./BuildBase";
 import BuildNet from "./BuildNet";
 import BuildResPath from "./BuildResPath";
+import BuildServerTable from "./BuildServerTable";
 import ExportTable from "./BuildTable";
 import BuildView from "./BuildView";
 
 interface Act {
     desc: string,
-    cls: new () => any;
+    cls: new () => BuildBase;
 }
 
 export default class BatMain {
@@ -15,6 +17,7 @@ export default class BatMain {
         const act: Act[] = [
             { desc: "创建UI", cls: BuildView },
             { desc: "导出表配置", cls: ExportTable },
+            { desc: "导出服务器表配置", cls: BuildServerTable },
             { desc: "更新资源路径", cls: BuildResPath },
             { desc: "更新网络相关", cls: BuildNet },
         ];
@@ -35,7 +38,7 @@ export default class BatMain {
                     else acts.push(act[ index ]);
                     acts.length && acts.forEach(v => {
                         console.log(colors.yellow("正在执行 => " + v.desc));
-                        new v.cls();
+                        (new v.cls()).doBuild();
                         console.log(colors.green(v.desc + " => 执行完毕！"));
                     });
                 } else {

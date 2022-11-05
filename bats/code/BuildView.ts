@@ -1,8 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
+import { BuildBase } from "./BuildBase";
 import { ResPathPathNoExt, UiDir, UtilPath, ViewCtrlDir, ViewDir, ViewIDPath, ViewInterfacePath, ViewNetProcessorDir, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir } from "./Utils";
-export default class BuildView {
+export default class BuildView extends BuildBase{
     private viewTemplate = GetTemplateContent("View");
     private ctrlTemplate = GetTemplateContent("ViewCtrl");
     private netProcessorTemplate = GetTemplateContent("ViewNetProcessor");
@@ -15,7 +16,7 @@ export default class BuildView {
         { sign: "Render", funcs: [ this.BuildComponent ], subDir: "Renders" },
     ]
 
-    constructor() {
+    doBuild() {
         MakeDir(UiDir);
         MakeDir(ViewDir);
         MakeDir(ViewCtrlDir);

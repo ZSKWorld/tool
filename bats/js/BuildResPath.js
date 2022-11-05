@@ -1,15 +1,35 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 exports.__esModule = true;
 var fs_1 = require("fs");
 var path = require("path");
+var BuildBase_1 = require("./BuildBase");
 var Const_1 = require("./Const");
 var Utils_1 = require("./Utils");
-var BuildResPath = /** @class */ (function () {
+var BuildResPath = /** @class */ (function (_super) {
+    __extends(BuildResPath, _super);
     function BuildResPath() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    BuildResPath.prototype.doBuild = function () {
         var content = this.buildResEnum(Const_1.ResDir, "res/");
         content = "".concat(Const_1.MODIFY_TIP, "export namespace ResPath {\n").concat(content, "}");
         (0, fs_1.writeFileSync)(Const_1.ResPathPath, content);
-    }
+    };
     BuildResPath.prototype.buildResEnum = function (dirPath, dirName, baseContent) {
         var _this = this;
         var content = baseContent || "";
@@ -77,5 +97,5 @@ var BuildResPath = /** @class */ (function () {
             return "\texport const enum ".concat(name, " {}\n");
     };
     return BuildResPath;
-}());
+}(BuildBase_1.BuildBase));
 exports["default"] = BuildResPath;

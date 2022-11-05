@@ -4,6 +4,7 @@ var colors = require("colors");
 var readline = require("readline");
 var BuildNet_1 = require("./BuildNet");
 var BuildResPath_1 = require("./BuildResPath");
+var BuildServerTable_1 = require("./BuildServerTable");
 var BuildTable_1 = require("./BuildTable");
 var BuildView_1 = require("./BuildView");
 var BatMain = /** @class */ (function () {
@@ -11,6 +12,7 @@ var BatMain = /** @class */ (function () {
         var act = [
             { desc: "创建UI", cls: BuildView_1["default"] },
             { desc: "导出表配置", cls: BuildTable_1["default"] },
+            { desc: "导出服务器表配置", cls: BuildServerTable_1["default"] },
             { desc: "更新资源路径", cls: BuildResPath_1["default"] },
             { desc: "更新网络相关", cls: BuildNet_1["default"] },
         ];
@@ -32,7 +34,7 @@ var BatMain = /** @class */ (function () {
                         acts.push(act[index]);
                     acts.length && acts.forEach(function (v) {
                         console.log(colors.yellow("正在执行 => " + v.desc));
-                        new v.cls();
+                        (new v.cls()).doBuild();
                         console.log(colors.green(v.desc + " => 执行完毕！"));
                     });
                 }

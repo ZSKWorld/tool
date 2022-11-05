@@ -3,5 +3,5 @@
 declare interface #itemNames# {
 #vars#}
 
-declare interface #configName# {
+declare interface #configName# extends KeyMap<#itemNames#> {
 #datas#}

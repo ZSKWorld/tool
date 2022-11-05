@@ -1,28 +1,49 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 exports.__esModule = true;
 var fs = require("fs");
 var path = require("path");
+var BuildBase_1 = require("./BuildBase");
 var Const_1 = require("./Const");
 var Utils_1 = require("./Utils");
-var BuildView = /** @class */ (function () {
+var BuildView = /** @class */ (function (_super) {
+    __extends(BuildView, _super);
     function BuildView() {
-        this.viewTemplate = (0, Utils_1.GetTemplateContent)("View");
-        this.ctrlTemplate = (0, Utils_1.GetTemplateContent)("ViewCtrl");
-        this.netProcessorTemplate = (0, Utils_1.GetTemplateContent)("ViewNetProcessor");
-        this.viewIDTemplate = (0, Utils_1.GetTemplateContent)("ViewID");
-        this.viewRegisterTemplate = (0, Utils_1.GetTemplateContent)("ViewRegister");
-        this.buildFilter = [
-            { sign: "UI", funcs: [this.BuildView, this.BuildCtrl] },
-            { sign: "Com", funcs: [this.BuildView, this.BuildCtrl], subDir: "Coms" },
-            { sign: "Render", funcs: [this.BuildComponent], subDir: "Renders" },
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.viewTemplate = (0, Utils_1.GetTemplateContent)("View");
+        _this.ctrlTemplate = (0, Utils_1.GetTemplateContent)("ViewCtrl");
+        _this.netProcessorTemplate = (0, Utils_1.GetTemplateContent)("ViewNetProcessor");
+        _this.viewIDTemplate = (0, Utils_1.GetTemplateContent)("ViewID");
+        _this.viewRegisterTemplate = (0, Utils_1.GetTemplateContent)("ViewRegister");
+        _this.buildFilter = [
+            { sign: "UI", funcs: [_this.BuildView, _this.BuildCtrl] },
+            { sign: "Com", funcs: [_this.BuildView, _this.BuildCtrl], subDir: "Coms" },
+            { sign: "Render", funcs: [_this.BuildComponent], subDir: "Renders" },
         ];
+        return _this;
+    }
+    BuildView.prototype.doBuild = function () {
         (0, Utils_1.MakeDir)(Const_1.UiDir);
         (0, Utils_1.MakeDir)(Const_1.ViewDir);
         (0, Utils_1.MakeDir)(Const_1.ViewCtrlDir);
         this.CheckBuild(Const_1.UiDir);
         this.BuildViewID();
         this.BuildViewRegister();
-    }
+    };
     BuildView.prototype.CheckBuild = function (dirPath) {
         var _this = this;
         fs.readdirSync(dirPath).forEach(function (filename) {
@@ -245,5 +266,5 @@ var BuildView = /** @class */ (function () {
         fs.writeFileSync(Const_1.ViewRegisterPath, content);
     };
     return BuildView;
-}());
+}(BuildBase_1.BuildBase));
 exports["default"] = BuildView;

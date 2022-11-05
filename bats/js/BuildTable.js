@@ -1,16 +1,33 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 exports.__esModule = true;
 var fs = require("fs");
 var xlsx = require("node-xlsx");
 var path = require("path");
+var BuildBase_1 = require("./BuildBase");
 var Const_1 = require("./Const");
 var Utils_1 = require("./Utils");
-var ExportTable = /** @class */ (function () {
+var ExportTable = /** @class */ (function (_super) {
+    __extends(ExportTable, _super);
     function ExportTable() {
-        var _this = this;
-        this.configTemplate = (0, Utils_1.GetTemplateContent)("ExportTableConfig");
-        this.tableMgrTemplate = (0, Utils_1.GetTemplateContent)("ExportTableMgr");
-        this.translater = {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.configTemplate = (0, Utils_1.GetTemplateContent)("TableConfig");
+        _this.tableMgrTemplate = (0, Utils_1.GetTemplateContent)("TableMgr");
+        _this.translater = {
             boolean: {
                 tsType: "boolean",
                 execute: function (value) {
@@ -77,18 +94,21 @@ var ExportTable = /** @class */ (function () {
                 }
             }
         };
-        this.keyIndex = 1;
-        this.keyNumMap = {};
-        this.tableDesc = [];
-        this.config = {
+        _this.keyIndex = 1;
+        _this.keyNumMap = {};
+        _this.tableDesc = [];
+        _this.config = {
             keyMap: {}
         };
-        this.allSubTypes = [];
+        _this.allSubTypes = [];
+        return _this;
+    }
+    ExportTable.prototype.doBuild = function () {
         (0, Utils_1.RemoveDir)(Const_1.TablesCfgDir);
         this.CreateConfig();
         this.CreateStructTypesDeclare();
         this.CreateTablMgr();
-    }
+    };
     ExportTable.prototype.GetKeyNum = function (key) {
         var keyNum = this.keyNumMap[key];
         if (!keyNum) {
@@ -184,7 +204,7 @@ var ExportTable = /** @class */ (function () {
     };
     ExportTable.prototype.CreateStructTypesDeclare = function () {
         var allSubTypes = this.allSubTypes;
-        var result = Const_1.MODIFY_TIP;
+        var result = Const_1.MODIFY_TIP + "declare interface KeyMap<T> { [ key: string ]: T; }\n";
         allSubTypes.forEach(function (v) {
             result += "declare interface ".concat(v.name, " {\n");
             Object.keys(v.type).forEach(function (key) {
@@ -280,5 +300,5 @@ var ExportTable = /** @class */ (function () {
         fs.writeFileSync(Const_1.LangPath, content);
     };
     return ExportTable;
-}());
+}(BuildBase_1.BuildBase));
 exports["default"] = ExportTable;
