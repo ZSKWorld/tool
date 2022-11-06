@@ -50,7 +50,9 @@ export default class BuildNet extends BuildBase {
         let content = "";
         Object.keys(this._allCtrls).forEach((v, index) => {
             ctrlType += index ? " & " + v : v;
-            content += `\t${ this._allCtrls[ v ] } { throw new Error("Method not implemented."); }\n`;
+            this._allCtrls[ v ].forEach(func => {
+                content += `\t${ func } { throw new Error("Method not implemented."); }\n`;
+            });
         });
         const data = this._serviceObjTemp.replace(/#controller#/g, ctrlType).replace(/#content#/g, content);
         fs.writeFileSync(ServiceObjPath, data.trim());

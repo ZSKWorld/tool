@@ -73,7 +73,9 @@ var BuildNet = /** @class */ (function (_super) {
         var content = "";
         Object.keys(this._allCtrls).forEach(function (v, index) {
             ctrlType += index ? " & " + v : v;
-            content += "\t".concat(_this._allCtrls[v], " { throw new Error(\"Method not implemented.\"); }\n");
+            _this._allCtrls[v].forEach(function (func) {
+                content += "\t".concat(func, " { throw new Error(\"Method not implemented.\"); }\n");
+            });
         });
         var data = this._serviceObjTemp.replace(/#controller#/g, ctrlType).replace(/#content#/g, content);
         fs.writeFileSync(Const_1.ServiceObjPath, data.trim());
