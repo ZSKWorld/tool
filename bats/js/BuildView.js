@@ -143,7 +143,7 @@ var BuildView = /** @class */ (function (_super) {
                 uiComps.forEach(function (v) {
                     v = v.split(" ")[1].split(":")[0];
                     if (v.startsWith("Btn")) {
-                        msgContent_1 += "\t\tthis.addMessageListener(".concat(viewMsg, ".On").concat(v, "Click, this.on").concat(v, "Click);\n");
+                        msgContent_1 += "\t\tthis.addMessage(".concat(viewMsg, ".On").concat(v, "Click, this.on").concat(v, "Click);\n");
                         funcContent_1 += "\tprivate on".concat(v, "Click(): void {\n\t\n\t}\n\n");
                     }
                 });

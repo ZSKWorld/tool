@@ -125,7 +125,7 @@ export default class BuildView extends BuildBase{
                 uiComps.forEach(v => {
                     v = v.split(" ")[ 1 ].split(":")[ 0 ];
                     if (v.startsWith("Btn")) {
-                        msgContent += `\t\tthis.addMessageListener(${ viewMsg }.On${ v }Click, this.on${ v }Click);\n`;
+                        msgContent += `\t\tthis.addMessage(${ viewMsg }.On${ v }Click, this.on${ v }Click);\n`;
                         funcContent += `\tprivate on${ v }Click(): void {\n\t\n\t}\n\n`;
                     }
                 })
