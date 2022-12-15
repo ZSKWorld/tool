@@ -64,7 +64,6 @@ export default class BuildView extends BuildBase{
             if (uiComps.length > 0) {
                 let msgEnumName = `${ filename }Msg`;
                 let useComps = [];
-                let addViewIDImport = false;
                 uiComps.forEach((v, index) => {
                     const [ varName, varType ] = v.substring(7, v.length - 1).split(":");
                     if (varName.startsWith("Btn")) {
@@ -73,19 +72,13 @@ export default class BuildView extends BuildBase{
                         messages += `\t${ msgName } = ${ msgValue },\n`;
                         sendContent += `\n\t    ${ varName }.onClick(this, this.sendMessage, [ ${ msgEnumName }.${ msgName } ]);`;
                     } else if (varType.startsWith("Com")) {
-                        addViewIDImport = true;
-                        !useComps.includes("listener") && useComps.unshift("listener");
-                        compExtension += `\n\t\tthis.initView(${ varName }, listener);`;
+                        compExtension += `\n\t\tthis.initView(${ varName });`;
                     } else return;
                     useComps.push(varName);
                 });
 
                 let resPathPath = path.relative(viewDir, ResPathPathNoExt);
                 imports += `import { ResPath } from "${ resPathPath.replace(/\\/g, "/") }";\n`;
-                if (addViewIDImport) {
-                    let viewIDRelativePath = path.relative(viewDir, ViewIDPath.replace(".ts", ""));
-                    imports += `import { ViewID } from "${ viewIDRelativePath.replace(/\\/g, "/") }";\n`;
-                }
                 compContent = useComps.length > 0 ? `const { ${ useComps.join(", ") } } = this;${ sendContent }` : sendContent;
             }
 
@@ -234,8 +227,7 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
 
         let Import = [
             `import { ViewID } from "./ViewID";\n`,
-            `import { ViewClass, NetProcessorClass, CtrlClass } from "./UIGlobal";\n`,
-            `import { INetProcessor_Class, IViewCtrl_Class, IView_Class } from "./Interfaces";\n`,
+            `import { uiMgr } from "./UIManager";\n`,
             `import { Logger } from "../../libs/utils/Logger";\n`
         ];
         const addImport = (arr: string[], has: boolean) => {

@@ -82,7 +82,6 @@ var BuildView = /** @class */ (function (_super) {
             if (uiComps.length > 0) {
                 var msgEnumName_1 = "".concat(filename, "Msg");
                 var useComps_1 = [];
-                var addViewIDImport_1 = false;
                 uiComps.forEach(function (v, index) {
                     var _a = v.substring(7, v.length - 1).split(":"), varName = _a[0], varType = _a[1];
                     if (varName.startsWith("Btn")) {
@@ -92,9 +91,7 @@ var BuildView = /** @class */ (function (_super) {
                         sendContent_1 += "\n\t    ".concat(varName, ".onClick(this, this.sendMessage, [ ").concat(msgEnumName_1, ".").concat(msgName, " ]);");
                     }
                     else if (varType.startsWith("Com")) {
-                        addViewIDImport_1 = true;
-                        !useComps_1.includes("listener") && useComps_1.unshift("listener");
-                        compExtension_1 += "\n\t\tthis.initView(".concat(varName, ", listener);");
+                        compExtension_1 += "\n\t\tthis.initView(".concat(varName, ");");
                     }
                     else
                         return;
@@ -102,10 +99,6 @@ var BuildView = /** @class */ (function (_super) {
                 });
                 var resPathPath = path.relative(viewDir, Const_1.ResPathPathNoExt);
                 imports += "import { ResPath } from \"".concat(resPathPath.replace(/\\/g, "/"), "\";\n");
-                if (addViewIDImport_1) {
-                    var viewIDRelativePath = path.relative(viewDir, Const_1.ViewIDPath.replace(".ts", ""));
-                    imports += "import { ViewID } from \"".concat(viewIDRelativePath.replace(/\\/g, "/"), "\";\n");
-                }
                 compContent = useComps_1.length > 0 ? "const { ".concat(useComps_1.join(", "), " } = this;").concat(sendContent_1) : sendContent_1;
             }
             content = content.replace(/#allComp#/g, compContent)
@@ -239,8 +232,7 @@ var BuildView = /** @class */ (function (_super) {
         addExtAndRegistCode(uiNames, "Views", "UI", true);
         var Import = [
             "import { ViewID } from \"./ViewID\";\n",
-            "import { ViewClass, NetProcessorClass, CtrlClass } from \"./UIGlobal\";\n",
-            "import { INetProcessor_Class, IViewCtrl_Class, IView_Class } from \"./Interfaces\";\n",
+            "import { uiMgr } from \"./UIManager\";\n",
             "import { Logger } from \"../../libs/utils/Logger\";\n"
         ];
         var addImport = function (arr, has) {

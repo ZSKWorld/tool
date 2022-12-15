@@ -19,19 +19,6 @@ class ViewRegister {
 
     /**页面注册 */
     private registerView() {
-		const register = this.registView;#registerCode#}
-
-	private registView(viewId: ViewID, viewCls: IView_Class, ctrlCls?: IViewCtrl_Class, netProcessorCls?: INetProcessor_Class) {
-		if (!viewCls) throw new Error("参数不能为空！");
-		if (!ViewClass[ viewId ]) {
-			viewCls.prototype.viewId = viewId;
-			ctrlCls.prototype.viewId = viewId;
-			(ViewClass as any)[ viewId ] = viewCls;
-			(CtrlClass as any)[ viewId ] = ctrlCls;
-			(NetProcessorClass as any)[ viewId ] = netProcessorCls;
-		} else {
-			logger.warn(`重复添加映射 => ${ viewId }`);
-		}
-	}
+		const register = uiMgr.registView.bind(uiMgr);#registerCode#}
 }
 export const uiRegister = new ViewRegister();
