@@ -26,7 +26,7 @@ var BuildView = /** @class */ (function (_super) {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.viewTemplate = (0, Utils_1.GetTemplateContent)("View");
         _this.ctrlTemplate = (0, Utils_1.GetTemplateContent)("ViewCtrl");
-        _this.netProcessorTemplate = (0, Utils_1.GetTemplateContent)("ViewNetProcessor");
+        _this.proxyTemplate = (0, Utils_1.GetTemplateContent)("ViewProxy");
         _this.viewIDTemplate = (0, Utils_1.GetTemplateContent)("ViewID");
         _this.viewRegisterTemplate = (0, Utils_1.GetTemplateContent)("ViewRegister");
         _this.buildFilter = [
@@ -148,25 +148,25 @@ var BuildView = /** @class */ (function (_super) {
             console.log(ctrlCls);
             fs.writeFileSync(ctrlPath, content);
         }
-        this.BuildProcessor(dirPath, filename, subDir);
+        this.BuildProxy(dirPath, filename, subDir);
     };
-    BuildView.prototype.BuildProcessor = function (dirPath, filename, subDir) {
+    BuildView.prototype.BuildProxy = function (dirPath, filename, subDir) {
         var _ctrlDir = path.resolve(Const_1.ViewCtrlDir, path.basename(dirPath) + "/" + subDir);
-        var _processorDir = path.resolve(Const_1.ViewNetProcessorDir, path.basename(dirPath) + "/" + subDir);
-        (0, Utils_1.MakeDir)(_processorDir);
+        var _proxyDir = path.resolve(Const_1.ViewProxyDir, path.basename(dirPath) + "/" + subDir);
+        (0, Utils_1.MakeDir)(_proxyDir);
         var _a = [
             filename + "Ctrl",
-            filename + "NetProcessor",
+            filename + "Proxy",
             path.resolve(_ctrlDir, filename + "Ctrl"),
-            path.resolve(_processorDir, filename + "NetProcessor.ts"),
-        ], ctrlCls = _a[0], processorCls = _a[1], ctrlPath = _a[2], processorPath = _a[3];
-        if (!fs.existsSync(processorPath)) {
-            var content = this.netProcessorTemplate;
+            path.resolve(_proxyDir, filename + "Proxy.ts"),
+        ], ctrlCls = _a[0], proxyCls = _a[1], ctrlPath = _a[2], proxyPath = _a[3];
+        if (!fs.existsSync(proxyPath)) {
+            var content = this.proxyTemplate;
             content = content.replace(/#hasSubDir#/g, subDir ? "../" : "")
-                .replace(/#viewCtrlPath#/g, path.relative(_processorDir, ctrlPath).replace(/\\/g, "/"))
-                .replace(/#processorName#/g, processorCls)
+                .replace(/#viewCtrlPath#/g, path.relative(_proxyDir, ctrlPath).replace(/\\/g, "/"))
+                .replace(/#proxyName#/g, proxyCls)
                 .replace(/#viewCtrl#/g, ctrlCls);
-            fs.writeFileSync(processorPath, content);
+            fs.writeFileSync(proxyPath, content);
         }
     };
     BuildView.prototype.BuildComponent = function (dirPath, filename, subDir) {
@@ -211,7 +211,7 @@ var BuildView = /** @class */ (function (_super) {
         var comViewNames = (0, Utils_1.GetAllFile)(Const_1.ViewDir, true, function (filename) { return filename.startsWith("Com") && filename.endsWith(".ts"); }, function (filename) { return filename.replace(".ts", ""); });
         var renderViewNames = (0, Utils_1.GetAllFile)(Const_1.ViewDir, true, function (filename) { return filename.startsWith("Render") && filename.endsWith(".ts"); }, function (filename) { return filename.replace(".ts", ""); });
         var ctrlNames = (0, Utils_1.GetAllFile)(Const_1.ViewCtrlDir, true, function (filename) { return filename.endsWith("Ctrl.ts"); }, function (filename) { return filename.replace(".ts", ""); });
-        var netProcessorNames = (0, Utils_1.GetAllFile)(Const_1.ViewNetProcessorDir, true, function (filename) { return filename.endsWith("NetProcessor.ts"); }, function (filename) { return filename.replace(".ts", ""); });
+        var proxyNames = (0, Utils_1.GetAllFile)(Const_1.ViewProxyDir, true, function (filename) { return filename.endsWith("Proxy.ts"); }, function (filename) { return filename.replace(".ts", ""); });
         var _a = ["", "", ""], BinderCode = _a[0], ExtensionCode = _a[1], RegisterCode = _a[2];
         binderNames.forEach(function (v) {
             var basename = path.basename(v);
@@ -224,7 +224,7 @@ var BuildView = /** @class */ (function (_super) {
                 var basename = path.basename(v);
                 ExtensionCode += "\t\tfgui.UIObjectFactory.setExtension(".concat(basename, ".URL, ").concat(basename, "View);\n");
                 if (hasRegist)
-                    RegisterCode += "\t\tregister(ViewID.".concat(basename.replace(sign, ""), "View, ").concat(basename, "View, ").concat(basename + "Ctrl", ", ").concat(basename + "NetProcessor", ");\n");
+                    RegisterCode += "\t\tregister(ViewID.".concat(basename.replace(sign, ""), "View, ").concat(basename, "View, ").concat(basename + "Ctrl", ", ").concat(basename + "Proxy", ");\n");
             });
         };
         addExtAndRegistCode(comNames, "Coms", "", true);
@@ -249,7 +249,7 @@ var BuildView = /** @class */ (function (_super) {
         addImport(comViewNames, true);
         addImport(renderViewNames, true);
         addImport(ctrlNames, true);
-        addImport(netProcessorNames, true);
+        addImport(proxyNames, true);
         var content = this.viewRegisterTemplate
             .replace("#import#", Import.sort().join(""))
             .replace("#binderCode#", BinderCode + "\t")

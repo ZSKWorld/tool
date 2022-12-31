@@ -38,7 +38,9 @@ export default class BuildNet extends BuildBase {
             const name = match.substring(0, match.trim().indexOf("("));
             const type = match.substring(match.indexOf("(") + 1, match.indexOf(")")).replace("Input", "Output").split(":")[ 1 ];
             const temp = UpperFirst(name);
-            data += `\t/** ${ type ? "参数类型：{@link " + type.trim() + "}" : "无参" } */\n`;
+            const param1 = "参数类型：{@link " + type.trim() + "}";
+            const param2 = type.includes("Output") ? " & {@link " + type.replace("Output", "Input") + "}" : "";
+            data += `\t/** ${ type ? param1 + param2 : "无参" } */\n`;
             data += `\tResponse_${ temp } = "Response_${ temp }",\n\n`;
         });
         data = data.trim() + "\n}";

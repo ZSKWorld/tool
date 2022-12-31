@@ -61,7 +61,9 @@ var BuildNet = /** @class */ (function (_super) {
             var name = match.substring(0, match.trim().indexOf("("));
             var type = match.substring(match.indexOf("(") + 1, match.indexOf(")")).replace("Input", "Output").split(":")[1];
             var temp = (0, Utils_1.UpperFirst)(name);
-            data += "\t/** ".concat(type ? "参数类型：{@link " + type.trim() + "}" : "无参", " */\n");
+            var param1 = "参数类型：{@link " + type.trim() + "}";
+            var param2 = type.includes("Output") ? " & {@link " + type.replace("Output", "Input") + "}" : "";
+            data += "\t/** ".concat(type ? param1 + param2 : "无参", " */\n");
             data += "\tResponse_".concat(temp, " = \"Response_").concat(temp, "\",\n\n");
         });
         data = data.trim() + "\n}";

@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { ResPathPathNoExt, UiDir, UtilPath, ViewCtrlDir, ViewDir, ViewIDPath, ViewInterfacePath, ViewNetProcessorDir, ViewRegisterPath } from "./Const";
+import { ResPathPathNoExt, UiDir, UtilPath, ViewCtrlDir, ViewDir, ViewIDPath, ViewInterfacePath, ViewProxyDir, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir } from "./Utils";
-export default class BuildView extends BuildBase{
+export default class BuildView extends BuildBase {
     private viewTemplate = GetTemplateContent("View");
     private ctrlTemplate = GetTemplateContent("ViewCtrl");
-    private netProcessorTemplate = GetTemplateContent("ViewNetProcessor");
+    private proxyTemplate = GetTemplateContent("ViewProxy");
     private viewIDTemplate = GetTemplateContent("ViewID");
     private viewRegisterTemplate = GetTemplateContent("ViewRegister");
 
@@ -130,26 +130,26 @@ export default class BuildView extends BuildBase{
             console.log(ctrlCls);
             fs.writeFileSync(ctrlPath, content);
         }
-        this.BuildProcessor(dirPath, filename, subDir);
+        this.BuildProxy(dirPath, filename, subDir);
     }
 
-    BuildProcessor(dirPath: string, filename: string, subDir: string) {
+    BuildProxy(dirPath: string, filename: string, subDir: string) {
         const _ctrlDir = path.resolve(ViewCtrlDir, path.basename(dirPath) + "/" + subDir);
-        const _processorDir = path.resolve(ViewNetProcessorDir, path.basename(dirPath) + "/" + subDir);
-        MakeDir(_processorDir);
-        const [ ctrlCls, processorCls, ctrlPath, processorPath ] = [
+        const _proxyDir = path.resolve(ViewProxyDir, path.basename(dirPath) + "/" + subDir);
+        MakeDir(_proxyDir);
+        const [ ctrlCls, proxyCls, ctrlPath, proxyPath ] = [
             filename + "Ctrl",
-            filename + "NetProcessor",
+            filename + "Proxy",
             path.resolve(_ctrlDir, filename + "Ctrl"),
-            path.resolve(_processorDir, filename + "NetProcessor.ts"),
+            path.resolve(_proxyDir, filename + "Proxy.ts"),
         ];
-        if (!fs.existsSync(processorPath)) {
-            let content = this.netProcessorTemplate;
+        if (!fs.existsSync(proxyPath)) {
+            let content = this.proxyTemplate;
             content = content.replace(/#hasSubDir#/g, subDir ? "../" : "")
-                .replace(/#viewCtrlPath#/g, path.relative(_processorDir, ctrlPath).replace(/\\/g, "/"))
-                .replace(/#processorName#/g, processorCls)
+                .replace(/#viewCtrlPath#/g, path.relative(_proxyDir, ctrlPath).replace(/\\/g, "/"))
+                .replace(/#proxyName#/g, proxyCls)
                 .replace(/#viewCtrl#/g, ctrlCls);
-            fs.writeFileSync(processorPath, content);
+            fs.writeFileSync(proxyPath, content);
         }
     }
 
@@ -204,7 +204,7 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
         const comViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Com") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
         const renderViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Render") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
         const ctrlNames = GetAllFile(ViewCtrlDir, true, filename => filename.endsWith("Ctrl.ts"), filename => filename.replace(".ts", ""));
-        const netProcessorNames = GetAllFile(ViewNetProcessorDir, true, filename => filename.endsWith("NetProcessor.ts"), filename => filename.replace(".ts", ""));
+        const proxyNames = GetAllFile(ViewProxyDir, true, filename => filename.endsWith("Proxy.ts"), filename => filename.replace(".ts", ""));
 
         let [ BinderCode, ExtensionCode, RegisterCode ] = [ "", "", "" ];
         binderNames.forEach(v => {
@@ -218,7 +218,7 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
                 const basename = path.basename(v);
                 ExtensionCode += `\t\tfgui.UIObjectFactory.setExtension(${ basename }.URL, ${ basename }View);\n`;
                 if (hasRegist)
-                    RegisterCode += `\t\tregister(ViewID.${ basename.replace(sign, "") }View, ${ basename }View, ${ basename + "Ctrl" }, ${ basename + "NetProcessor" });\n`;
+                    RegisterCode += `\t\tregister(ViewID.${ basename.replace(sign, "") }View, ${ basename }View, ${ basename + "Ctrl" }, ${ basename + "Proxy" });\n`;
             });
         }
         addExtAndRegistCode(comNames, "Coms", "", true);
@@ -245,7 +245,7 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
         addImport(comViewNames, true);
         addImport(renderViewNames, true);
         addImport(ctrlNames, true);
-        addImport(netProcessorNames, true);
+        addImport(proxyNames, true);
 
         let content = this.viewRegisterTemplate
             .replace("#import#", Import.sort().join(""))
