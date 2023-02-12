@@ -167,7 +167,7 @@ export default class ExportTable extends BuildBase {
     }
     CreateStructTypesDeclare() {
         let { allSubTypes } = this;
-        let result = MODIFY_TIP + `declare interface KeyMap<T> { [ key: string ]: T; }\n`;
+        let result = MODIFY_TIP;
         allSubTypes.forEach(v => {
             result += `declare interface ${ v.name } {\n`;
             Object.keys(v.type).forEach(key => {

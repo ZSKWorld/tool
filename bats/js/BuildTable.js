@@ -204,7 +204,7 @@ var ExportTable = /** @class */ (function (_super) {
     };
     ExportTable.prototype.CreateStructTypesDeclare = function () {
         var allSubTypes = this.allSubTypes;
-        var result = Const_1.MODIFY_TIP + "declare interface KeyMap<T> { [ key: string ]: T; }\n";
+        var result = Const_1.MODIFY_TIP;
         allSubTypes.forEach(function (v) {
             result += "declare interface ".concat(v.name, " {\n");
             Object.keys(v.type).forEach(function (key) {
