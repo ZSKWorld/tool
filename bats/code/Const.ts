@@ -23,7 +23,7 @@ export const NetDir = resolve(__workname, "src/core/net");
 export const NetInterfaceDir = resolve(NetDir, "interface");
 export const ServicesPath = resolve(NetDir, "Services.ts");
 export const ServiceObjPath = resolve(NetDir, "ServiceObj.ts");
-export const NetResponsePath = resolve(NetDir, "NetResponse.ts");
+export const NetResponsePath = resolve(NetDir, "enum/NetMessage.ts");
 export const UserDataPath = resolve(NetInterfaceDir, "userdata/IUserData.d.ts");
 export const UserDataEventPath = resolve(__workname, "src/core/userData/UserDataEvent.ts")
 
