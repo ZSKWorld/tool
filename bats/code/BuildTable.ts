@@ -5,7 +5,7 @@ import { BuildBase } from "./BuildBase";
 import { LangPath, MODIFY_TIP, TableDataPath, TablesCfgDir, TableStructTypePath, xlsxDir } from "./Const";
 import { GetTemplateContent, RemoveDir } from "./Utils";
 
-export default class ExportTable extends BuildBase {
+export default class BuildTable extends BuildBase {
     configTemplate = GetTemplateContent("TableConfig");
     tableMgrTemplate = GetTemplateContent("TableMgr");
     translater: { [ key: string ]: { tsType: string, execute: Function } } = {

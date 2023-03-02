@@ -11,8 +11,8 @@ export default class BuildView extends BuildBase {
     private viewRegisterTemplate = GetTemplateContent("ViewRegister");
 
     private buildFilter = [
-        { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl ] },
-        { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Coms" },
+        { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ] },
+        { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Coms" },
         { sign: "Render", funcs: [ this.BuildComponent ], subDir: "Renders" },
     ]
 
@@ -22,7 +22,7 @@ export default class BuildView extends BuildBase {
         MakeDir(ViewCtrlDir);
         this.CheckBuild(UiDir);
         this.BuildViewID();
-        this.BuildViewRegister()
+        this.BuildViewRegister();
     }
 
     CheckBuild(dirPath: string) {
@@ -130,7 +130,6 @@ export default class BuildView extends BuildBase {
             console.log(ctrlCls);
             fs.writeFileSync(ctrlPath, content);
         }
-        this.BuildProxy(dirPath, filename, subDir);
     }
 
     BuildProxy(dirPath: string, filename: string, subDir: string) {

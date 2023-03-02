@@ -4,7 +4,7 @@ import { BuildBase } from "./BuildBase";
 import BuildNet from "./BuildNet";
 import BuildResPath from "./BuildResPath";
 import BuildServerTable from "./BuildServerTable";
-import ExportTable from "./BuildTable";
+import BuildTable from "./BuildTable";
 import BuildView from "./BuildView";
 
 interface Act {
@@ -16,7 +16,7 @@ export default class BatMain {
     constructor() {
         const act: Act[] = [
             { desc: "创建UI", cls: BuildView },
-            { desc: "导出表配置", cls: ExportTable },
+            { desc: "导出表配置", cls: BuildTable },
             { desc: "导出服务器表配置", cls: BuildServerTable },
             { desc: "更新资源路径", cls: BuildResPath },
             { desc: "更新网络相关", cls: BuildNet },
