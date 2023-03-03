@@ -2,6 +2,7 @@ import * as colors from "colors";
 import * as readline from "readline";
 import { BuildBase } from "./BuildBase";
 import BuildNet from "./BuildNet";
+import { BuildProxy } from "./BuildProxy";
 import BuildResPath from "./BuildResPath";
 import BuildServerTable from "./BuildServerTable";
 import BuildTable from "./BuildTable";
@@ -15,7 +16,8 @@ interface Act {
 export default class BatMain {
     constructor() {
         const act: Act[] = [
-            { desc: "创建UI", cls: BuildView },
+            { desc: "创建 View & ViewCtrl", cls: BuildView },
+            { desc: "创建 Proxy", cls: BuildProxy },
             { desc: "导出表配置", cls: BuildTable },
             { desc: "导出服务器表配置", cls: BuildServerTable },
             { desc: "更新资源路径", cls: BuildResPath },

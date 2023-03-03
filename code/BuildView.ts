@@ -10,16 +10,13 @@ export default class BuildView extends BuildBase {
     private viewIDTemplate = GetTemplateContent("ViewID");
     private viewRegisterTemplate = GetTemplateContent("ViewRegister");
 
-    private buildFilter = [
-        { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ] },
-        { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Coms" },
+    protected buildFilter = [
+        { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl ] },
+        { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Coms" },
         { sign: "Render", funcs: [ this.BuildComponent ], subDir: "Renders" },
-    ]
+    ];
 
     doBuild() {
-        MakeDir(UiDir);
-        MakeDir(ViewDir);
-        MakeDir(ViewCtrlDir);
         this.CheckBuild(UiDir);
         this.BuildViewID();
         this.BuildViewRegister();
@@ -216,8 +213,11 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
             arr.forEach(v => {
                 const basename = path.basename(v);
                 ExtensionCode += `\t\tfgui.UIObjectFactory.setExtension(${ basename }.URL, ${ basename }View);\n`;
-                if (hasRegist)
-                    RegisterCode += `\t\tregister(ViewID.${ basename.replace(sign, "") }View, ${ basename }View, ${ basename + "Ctrl" }, ${ basename + "Proxy" });\n`;
+                if (hasRegist) {
+                    let proxyName = basename + "Proxy";
+                    proxyName = proxyNames.find(v1 => v1.endsWith(proxyName)) ? ", " + proxyName : "";
+                    RegisterCode += `\t\tregister(ViewID.${ basename.replace(sign, "") }View, ${ basename }View, ${ basename + "Ctrl" }${ proxyName });\n`;
+                }
             });
         }
         addExtAndRegistCode(comNames, "Coms", "", true);

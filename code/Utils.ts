@@ -30,6 +30,7 @@ export function RemoveDir(dir: string) {
  * @returns 
  */
 export function GetAllFile(dirPath: string, absolute?: boolean, filter?: (name: string) => boolean, map?: (name: string) => string) {
+    if (fs.existsSync(dirPath) == false) return [];
     const names: string[] = [];
     fs.readdirSync(dirPath).forEach(filename => {
         const filePath = path.resolve(dirPath, filename);
