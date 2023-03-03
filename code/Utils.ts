@@ -47,7 +47,7 @@ export function GetAllFile(dirPath: string, absolute?: boolean, filter?: (name: 
 }
 /**获取模板内容 */
 export function GetTemplateContent(templateName: string) {
-    return fs.readFileSync(__dirname + "../../template/" + templateName + ".template").toString();
+    return fs.readFileSync(path.resolve(__dirname, "../../template/" + templateName + ".template")).toString();
 }
 
 export function UpperFirst(str: string, splits?: string[]) {
