@@ -6,7 +6,7 @@
         {
             "label": "编译",
             "type": "shell",
-            "command": "tsc ./bats/code/BatMain.ts --outDir ./bats/js",
+            "command": "tsc ./bats/code/BatMain.ts --outDir ./bin/js",
             "problemMatcher": []
         },
     ]
