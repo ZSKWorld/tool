@@ -63,7 +63,7 @@ export default class BuildView extends BuildBase {
                 let useComps = [];
                 uiComps.forEach((v, index) => {
                     const [ varName, varType ] = v.substring(7, v.length - 1).split(":");
-                    if (varName.startsWith("Btn")) {
+                    if (varName.startsWith("Btn") || varName.startsWith("btn")) {
                         let msgName = `On${ varName }Click`;
                         let msgValue = `"${ filename }_${ msgName }"`;
                         messages += `\t${ msgName } = ${ msgValue },\n`;
