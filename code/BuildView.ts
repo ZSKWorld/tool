@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
 import { ResPathPathNoExt, UiDir, UtilPath, ViewCtrlDir, ViewDir, ViewIDPath, ViewInterfacePath, ViewProxyDir, ViewRegisterPath } from "./Const";
-import { GetAllFile, GetTemplateContent, MakeDir } from "./Utils";
+import { GetAllFile, GetTemplateContent, MakeDir, UpperFirst } from "./Utils";
 export default class BuildView extends BuildBase {
     private viewTemplate = GetTemplateContent("View");
     private ctrlTemplate = GetTemplateContent("ViewCtrl");
@@ -63,12 +63,12 @@ export default class BuildView extends BuildBase {
                 let useComps = [];
                 uiComps.forEach((v, index) => {
                     const [ varName, varType ] = v.substring(7, v.length - 1).split(":");
-                    if (varName.startsWith("Btn") || varName.startsWith("btn")) {
-                        let msgName = `On${ varName }Click`;
+                    if (varName.toLowerCase().startsWith("btn")) {
+                        let msgName = `On${ UpperFirst(varName, [ "_" ], "") }Click`;
                         let msgValue = `"${ filename }_${ msgName }"`;
                         messages += `\t${ msgName } = ${ msgValue },\n`;
                         sendContent += `\n\t    ${ varName }.onClick(this, this.sendMessage, [ ${ msgEnumName }.${ msgName } ]);`;
-                    } else if (varType.startsWith("Com")) {
+                    } else if (varType.toLowerCase().startsWith("com")) {
                         compExtension += `\n\t\tthis.initView(${ varName });`;
                     } else return;
                     useComps.push(varName);
@@ -114,9 +114,10 @@ export default class BuildView extends BuildBase {
             if (uiComps.length > 0) {
                 uiComps.forEach(v => {
                     v = v.split(" ")[ 1 ].split(":")[ 0 ];
-                    if (v.startsWith("Btn")) {
-                        msgContent += `\t\tthis.addMessage(${ viewMsg }.On${ v }Click, this.on${ v }Click);\n`;
-                        funcContent += `\tprivate on${ v }Click(): void {\n\t\n\t}\n\n`;
+                    if (v.toLowerCase().startsWith("btn")) {
+                        const btnName = UpperFirst(v, [ "_" ], "");
+                        msgContent += `\t\tthis.addMessage(${ viewMsg }.On${ btnName }Click, this.on${ btnName }Click);\n`;
+                        funcContent += `\tprivate on${ btnName }Click(): void {\n\t\n\t}\n\n`;
                     }
                 })
                 msgContent = msgContent ? msgContent.trimEnd() : msgContent;
