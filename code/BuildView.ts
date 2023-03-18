@@ -12,6 +12,7 @@ export default class BuildView extends BuildBase {
 
     protected buildFilter = [
         { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl ] },
+        { sign: "Btn", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Btns" },
         { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Coms" },
         { sign: "Render", funcs: [ this.BuildComponent ], subDir: "Renders" },
     ];
@@ -63,12 +64,13 @@ export default class BuildView extends BuildBase {
                 let useComps = [];
                 uiComps.forEach((v, index) => {
                     const [ varName, varType ] = v.substring(7, v.length - 1).split(":");
-                    if (varName.toLowerCase().startsWith("btn")) {
+                    if (varType.toLowerCase().startsWith("com")) {
+                        compExtension += `\n\t\tthis.initView(${ varName });`;
+                    } else if (varName.toLowerCase().startsWith("btn")) {
                         let msgName = `On${ UpperFirst(varName, [ "_" ], "") }Click`;
                         let msgValue = `"${ filename }_${ msgName }"`;
                         messages += `\t${ msgName } = ${ msgValue },\n`;
                         sendContent += `\n\t    ${ varName }.onClick(this, this.sendMessage, [ ${ msgEnumName }.${ msgName } ]);`;
-                    } else if (varType.toLowerCase().startsWith("com")) {
                         compExtension += `\n\t\tthis.initView(${ varName });`;
                     } else return;
                     useComps.push(varName);
@@ -167,10 +169,10 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
     }
 
     BuildViewID() {
-        let [ coms, views ] = [ "\t/**Coms */\n", "\t/**Views */\n" ];
+        let [ btns, coms, views ] = [ "\t/**Btns */\n", "\t/**Coms */\n", "\t/**Views */\n" ];
         const viewNames = GetAllFile(
             ViewDir, false,
-            filename => (filename.startsWith("UI") || filename.startsWith("Com")) && filename.endsWith("View.ts"),
+            filename => (filename.startsWith("UI") || filename.startsWith("Com") || filename.startsWith("Btn")) && filename.endsWith("View.ts"),
             filename => filename.replace(".ts", ""),
         );
         let viewCount = 0;
@@ -182,10 +184,13 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
             } else if (v.startsWith("Com")) {
                 coms += `\t${ v } = "${ v }",\n`;
                 viewCount++;
+            } else if (v.startsWith("Btn")) {
+                btns += `\t${ v } = "${ v }",\n`;
+                viewCount++;
             }
         });
         if (viewCount == 0) coms = "\tNone = \"\",\n" + coms;
-        const content = this.viewIDTemplate.replace("#content#", coms + "\n" + views);
+        const content = this.viewIDTemplate.replace("#content#", btns + "\n" + coms + "\n" + views);
         fs.writeFileSync(ViewIDPath, content);
     }
 
@@ -194,10 +199,12 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
 
         const binderNames = GetAllFile(UiDir, true, filename => filename.endsWith("Binder.ts"), filename => filename.replace(".ts", ""));
         const uiNames = GetAllFile(UiDir, true, filename => filename.startsWith("UI") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
+        const btnNames = GetAllFile(UiDir, true, filename => filename.startsWith("Btn") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
         const comNames = GetAllFile(UiDir, true, filename => filename.startsWith("Com") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
         const renderNames = GetAllFile(UiDir, true, filename => filename.startsWith("Render") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
 
         const uiViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("UI") && filename.endsWith("View.ts"), filename => filename.replace(".ts", ""));
+        const btnViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Btn") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
         const comViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Com") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
         const renderViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Render") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
         const ctrlNames = GetAllFile(ViewCtrlDir, true, filename => filename.endsWith("Ctrl.ts"), filename => filename.replace(".ts", ""));
@@ -221,6 +228,7 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
                 }
             });
         }
+        addExtAndRegistCode(btnNames, "Btns", "", true);
         addExtAndRegistCode(comNames, "Coms", "", true);
         addExtAndRegistCode(renderNames, "Renders", "Render", false);
         addExtAndRegistCode(uiNames, "Views", "UI", true);
@@ -238,10 +246,12 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
         }
         addImport(binderNames, false);
         addImport(uiNames, false);
+        addImport(btnNames, false);
         addImport(comNames, false);
         addImport(renderNames, false);
 
         addImport(uiViewNames, true);
+        addImport(btnViewNames, true);
         addImport(comViewNames, true);
         addImport(renderViewNames, true);
         addImport(ctrlNames, true);
