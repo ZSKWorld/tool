@@ -1,4 +1,3 @@
-import * as colors from "colors";
 import * as readline from "readline";
 import { BuildBase } from "./BuildBase";
 import BuildNet from "./BuildNet";
@@ -6,7 +5,9 @@ import { BuildProxy } from "./BuildProxy";
 import BuildResPath from "./BuildResPath";
 import BuildServerTable from "./BuildServerTable";
 import BuildTable from "./BuildTable";
+import BuildTable_XY from "./BuildTable_XY";
 import BuildView from "./BuildView";
+import { Logger } from "./Console";
 
 interface Act {
     desc: string,
@@ -22,6 +23,7 @@ export default class BatMain {
             { desc: "导出服务器表配置", cls: BuildServerTable },
             { desc: "更新资源路径", cls: BuildResPath },
             { desc: "更新网络相关", cls: BuildNet },
+            { desc: "小严的表", cls: BuildTable_XY },
         ];
         let tip = "选择要进行的操作：\n0. 全部执行\n";
         act.forEach((v, index) => tip += `${ index + 1 }. ${ v.desc }\n`);
@@ -39,12 +41,12 @@ export default class BatMain {
                     if (index == -1) acts.push(...act);
                     else acts.push(act[ index ]);
                     acts.length && acts.forEach(v => {
-                        console.log(colors.yellow("正在执行 => " + v.desc));
+                        Logger.warn("正在执行 => " + v.desc);
                         (new v.cls()).doBuild();
-                        console.log(colors.green(v.desc + " => 执行完毕！"));
+                        Logger.green(v.desc + " => 执行完毕！")
                     });
                 } else {
-                    console.log(colors.red("错误的选项！"));
+                    Logger.error("错误的选项！");
                 }
                 rl.close();
                 process.exit();
