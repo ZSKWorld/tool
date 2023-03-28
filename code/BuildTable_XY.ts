@@ -3,7 +3,7 @@ import * as xlsx from "node-xlsx";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
 import { Logger } from "./Console";
-import { LangPath, MODIFY_TIP, TableDataPath, TablesCfgDir, TableStructTypePath, xlsxDir } from "./Const";
+import { TableDataPath, TablesCfgDir, xlsxDir } from "./Const";
 import { GetTemplateContent, RemoveDir } from "./Utils";
 
 const enum TableExportType {
@@ -43,136 +43,59 @@ export default class BuildTable_XY extends BuildBase {
 
     translator: { [ key in TableExportType ]: Function } = {
         Int: (str: string) => {
-            if (isNaN(+str)) Logger.error("非法数字: " + str);
             return +str || 0;
         },
         String: (str: string) => {
-            return str || "";
+            return str == null ? "" : String(str);
         },
         Bool: (str: string) => {
-            return str == "true";
+            return String(str).toLowerCase() == "true";
         },
         Date: (str: string) => {
-            const reg = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/;
-            if (reg.test(str) == false) Logger.error("非法时间格式: " + str);
             return str;
         },
         IntArray: (str: string) => {
-            if (!str) return [];
-            const reg = /^(\d+)(,(\d+))*$/;
-            if (reg.test(str) == false) Logger.error("非法数组格式: " + str);
-            return str.split(",").map(v => +v);
+            if (str == "" || str == null) return [];
+            return String(str).split(",").map(v => this.translator.Int(v));
         },
         IntMatrix: (str: string) => {
-            if (!str) return [];
-            const reg = /^(\d+)(,(\d+))*;(\d+)(,(\d+))*$/;
-            if (reg.test(str) == false) Logger.error("非法数组矩阵格式: " + str);
-            return str.split(";").map(v => v.split(",").map(v => +v));
+            if (str == "" || str == null) return [];
+            return String(str).split(";").map(v => this.translator.IntArray(v));
         },
         StringArray: (str: string) => {
-            if (!str) return [];
-            const reg = /^(\w+)(,(\w+))*$/;
-            if (reg.test(str) == false) Logger.error("非法字符数组格式: " + str);
-            return str.split(",");
+            str = str == null ? "" : String(str);
+            return str.split(",").map(v => this.translator.String(v));
         },
         StringMatrix: (str: string) => {
-            if (!str) return [];
-            const reg = /^(\w+)(,(\w+))*;(\w+)(,(\w+))*$/;
-            if (reg.test(str) == false) Logger.error("非法字符数组矩阵格式: " + str);
-            return str.split(";").map(v => v.split(","));
+            str = str == null ? "" : String(str);
+            return str.split(";").map(v => this.translator.StringArray(v));
         },
         Object: (str: string, type: string) => {
-            if (!str) return {};
-            const reg = /^(\w+)(,(\w+))*$/;
-            if (reg.test(str) == false) Logger.error("非法对象格式: " + str);
+            str = str == null ? "" : String(str);
+            type = type.replace(/\"/g, "");
             const obj = {};
             const values = str.split(",");
-            type.substring(1, str.length - 1).split(",").forEach((v, index) => {
+            type.substring(1, type.length - 1).split(",").forEach((v, index) => {
                 const [ key, vType ] = v.split(":");
-                obj[ key ] = this.translator[ this.GetExportType(vType) ](values[ index ], vType);
+                obj[ this.GetKeyNum(key) ] = this.translator[ this.GetExportType(vType) ](values[ index ], vType);
             });
+            return obj;
         },
         ObjectArray: (str: string, type: string) => {
-            if (!str) return [];
-
-            // const reg = /^([\u4e00-\u9fa5\w]+)(,([\u4e00-\u9fa5\w]+))*;([\u4e00-\u9fa5\w]+)(,([\u4e00-\u9fa5\w]+))*$/;
-            // if (reg.test(str) == false) Logger.error("非法对象数组格式: " + str);
-
+            str = str == null ? "" : String(str);
             const values = str.split(";");
             const realType = type.replace("array", "");
-            return values.map(v => this.translator[ TableExportType.Export_Object ](v, realType));
+            return values.map(v => this.translator.Object(v, realType));
         },
         ObjectMatrix: (str: string, type: string) => {
-            if (!str) return [];
-            // const reg = /^(\w+)(,(\w+))*;(\w+)(,(\w+))*;(\w+)(,(\w+))*$/;
-            // if (reg.test(str) == false) Logger.error("非法对象矩阵格式: " + str);
+            str = str == null ? "" : String(str);
             const values = str.split("|");
             const realType = type.replace("matrix", "");
-            return values.map(v => this.translator[ TableExportType.Export_ObjectArray ](v, realType));
+            return values.map(v => this.translator.ObjectArray(v, realType));
         },
         Type: (str: string) => { return str; },
         Lang: (str: string) => void 0,
         Skip: (str: string) => void 0,
-    };
-    translater: { [ key: string ]: { tsType: string, execute: Function } } = {
-        boolean: {
-            tsType: "boolean",
-            execute: (value: string) => {
-                return value == "true";
-            }
-        },
-        number: {
-            tsType: "number",
-            execute: (value: any) => {
-                if (value == null) return 0;
-                return Number(value) || 0;
-            }
-        },
-        string: {
-            tsType: "string",
-            execute: (value: string) => {
-                if (value == null) return "";
-                return String(value);
-            }
-        },
-        numberArray: {
-            tsType: "number[]",
-            execute: (value: string) => {
-                if (value == null) return [];
-                return String(value)?.split(",").map(v => Number(v)) || [];
-            }
-        },
-        stringArray: {
-            tsType: "string[]",
-            execute: (value: string) => {
-                if (value == null) return [];
-                return String(value)?.split(",") || [];
-            }
-        },
-        struct: {
-            tsType: "",
-            execute: (value: string, type: { [ key: string ]: string }) => {
-                if (value == null) return null;
-                const result = {};
-                const typeKeys = Object.keys(type);
-                const valueArr = value.split("-");
-                typeKeys.forEach((v, index) => {
-                    result[ this.GetKeyNum(v) ] = this.translater[ type[ v ] ].execute(valueArr[ index ]);
-                });
-                return result;
-            }
-        },
-        structArray: {
-            tsType: "",
-            execute: (value: string, type: { [ key: string ]: string }) => {
-                if (value == null) return null;
-                const result = [];
-                const valueArr = value.split("|");
-                valueArr.forEach(v => result.push(this.translater.struct.execute(v, type)));
-                return result;
-            }
-        }
-
     };
     keyIndex = 1;
     keyNumMap = {};
@@ -186,8 +109,6 @@ export default class BuildTable_XY extends BuildBase {
     doBuild() {
         RemoveDir(TablesCfgDir);
         this.CreateConfig();
-        this.CreateStructTypesDeclare();
-        this.CreateTablMgr();
     }
 
     GetKeyNum(key: string) {
@@ -195,12 +116,13 @@ export default class BuildTable_XY extends BuildBase {
         if (!keyNum) {
             keyNum = this.keyIndex++;
             this.keyNumMap[ key ] = keyNum;
+            this.keyNumMap[ keyNum ] = key;
             this.config.keyMap[ keyNum ] = key;
         }
         return keyNum;
     }
 
-    GetTSType(type: string, typeDesc?: string) {
+    GetTSType(type: string) {
         switch (type) {
             case "int": return "number";
             case "string": return "string";
@@ -214,14 +136,14 @@ export default class BuildTable_XY extends BuildBase {
                 if (type.startsWith("[") && type.endsWith("]")) return "$TYPE$";
                 else if (type.startsWith("array[") && type.endsWith("]")) return "$TYPE$[]";
                 else if (type.startsWith("matrix[") && type.endsWith("]")) return "$TYPE$[][]";
-                else if (type.startsWith("type")) return this.GetTSType(typeDesc);
+                else if (type.startsWith("type")) return "string";//this.GetTSType(typeDesc);
                 else if (type.startsWith("lang")) return "any";
                 else if (type.startsWith("skip")) return "any";
-                break;
+                else throw new Error("unknown type: " + type);
         }
     }
 
-    GetExportType(str: string): TableExportType {
+    GetExportType(str: string) {
         switch (str) {
             case "int": return TableExportType.Export_Int;
             case "string": return TableExportType.Export_String;
@@ -238,185 +160,55 @@ export default class BuildTable_XY extends BuildBase {
                 else if (str.startsWith("type")) return TableExportType.Export_Type;
                 else if (str.startsWith("lang")) return TableExportType.Export_Lang;
                 else if (str.startsWith("skip")) return TableExportType.Export_Skip;
-                break;
+                else throw new Error("unknown type: " + str);
         }
     }
 
     CreateConfig() {
+        const Sign_Types = "$";
+        const Sign_Keys = "!";
+        const Sign_Descs = "#";
+        const Sign_Ignore = "*";
+        const Sign_Skip = "skip";
+        const translator = this.translator;
         fs.mkdirSync(TablesCfgDir);
         fs.readdirSync(xlsxDir).forEach(files => {
-            if (files.endsWith(".xlsx")) {
+            if (files.endsWith(".xlsm")) {
                 let sheets: { name: string, data: string[][] }[] = xlsx.parse(path.resolve(xlsxDir, files)) as any;
-                sheets.forEach(v => {
-                    const tableData = v.data;
-                    const ignoreLines = 4;
-                    if (tableData.length <= ignoreLines) return;
-                    const [ tableName, tableDesc ] = v.name.split('|');
-                    if (!tableName) return;
-                    // if (tableName == "Lang") this.CreateLangCode(tableData);
+                //第一个sheet是使用说明,不要
+                sheets.shift();
+                sheets.forEach(sht => {
                     const table = {};
-                    this.tableDesc.push(tableDesc);
-                    this.config[ tableName ] = table;
-                    const [ types, keys, descs, descs2 ] = tableData;
-                    const comments: string[] = [];
-                    for (let i = keys.length - 1; i >= 0; i--) {
-                        if (descs[ i ] && descs[ i ].startsWith("//")) {
-                            descs[ i ] = descs[ i ].replace("//", "");
-                            tableData.forEach((v, index) => index >= 3 && comments.push(v[ i ]));
+                    const datas = sht.data;
+                    const types = datas.shift();
+                    const keys = datas.shift();
+                    const descs = datas.shift();
+                    const descs2 = datas.shift();
+                    const typeCnt = types.length;
+                    const dataCnt = datas.length;
+                    let hasData = false;
+                    for (let i = 1; i < typeCnt; i++) {
+                        const type = types[ i ];
+                        if (type == Sign_Skip) continue;
+                        const key = keys[ i ];
+                        const desc = descs[ i ];
+                        const desc2 = descs2[ i ];
+                        for (let j = 0; j < dataCnt; j++) {
+                            const row = datas[ j ];
+                            if (!row[ 2 ]) continue;
+                            if (row[ 0 ] == Sign_Ignore) continue;
+                            const item = table[ row[ 2 ] ] = table[ row[ 2 ] ] || {};
+                            const value = translator[ this.GetExportType(type) ](row[ i ], type);
+                            item[ this.GetKeyNum(key) ] = value;
+                            hasData = true;
                         }
-                        if (keys[ i ].startsWith("#"))
-                            tableData.forEach(v => v.splice(i, 1));
                     }
-                    const tableIds: number[] = [];
-                    const { structTypes, structNames } = this.GetStructTypes(types, keys);
-                    this.AddStructTypes(structTypes, structNames);
-                    for (let i = ignoreLines; i < tableData.length; i++) {
-                        const item = tableData[ i ];
-                        tableIds.push(+item[ 0 ]);
-                        let itemData = table[ item[ 0 ] ] = {};
-                        for (let j = 0; j < keys.length; j++) {
-                            let keyNum = this.GetKeyNum(keys[ j ]);
-                            itemData[ keyNum ] = this.translater[ types[ j ] ].execute(item[ j ], structTypes[ j ]);
-                        }
-                    }
-                    this.CreateTableConfig(tableName, descs, keys, types, tableIds, structTypes, structNames, comments);
+                    if(hasData)
+                        this.config[ sht.name ] = table;
                 });
             }
         });
         fs.writeFileSync(TableDataPath, JSON.stringify(this.config));
-    }
-    AddStructTypes(structTypes: { [ key: string ]: string }[], structNames: string[]) {
-        let { allSubTypes } = this;
-        structTypes.forEach((v, index) => {
-            if (v != null) {
-                let mark = this.CheckStructTypes(v.toString(), structNames[ index ]);
-                if (mark == -1) return;
-                if (mark == -2) {
-                    allSubTypes.push({ type: v, name: structNames[ index ] });
-                } else {
-                    structNames[ index ] = allSubTypes[ mark ].name;
-                }
-            }
-        });
-    }
-    /**
-     * -1:有重复的
-     * -2:没有重复的
-     * i:有重复的，但名字不同
-     */
-    CheckStructTypes(flag: string, name: string) {
-        let { allSubTypes } = this;
-        for (let i = allSubTypes.length - 1; i >= 0; i--) {
-            const ele = allSubTypes[ i ];
-            if (ele.type.toString() == flag) {
-                if (ele.name == name) return -1;
-                else return i;
-            }
-        }
-        return -2;
-    }
-    CreateStructTypesDeclare() {
-        let { allSubTypes } = this;
-        let result = MODIFY_TIP;
-        allSubTypes.forEach(v => {
-            result += `declare interface ${ v.name } {\n`;
-            Object.keys(v.type).forEach(key => {
-                result += `\t${ key }: ${ v.type[ key ] };\n`;
-            });
-            result += "}\n";
-        });
-        fs.writeFileSync(TableStructTypePath, result.trim());
-    }
-
-    CreateTableConfig(
-        name: string, descs: string[], keys: string[], types: string[], ids: number[],
-        subTypes: { [ key: string ]: string }[], subTypeNames: string[], comments: string[]
-    ) {
-        // let subTypeContent = "";
-        // subTypes.forEach((v, index) => {
-        //     if (!v) return;
-        //     let subContent = `export interface ${subTypeNames[index]} {\n`;
-        //     const subKeys = Object.keys(v);
-        //     subKeys.forEach(subV => {
-        //         subContent += `\treadonly ${subV}: ${this.translater[v[subV]].tsType};\n`;
-        //     });
-        //     subTypeContent += subContent + "}\n\n";
-        // });
-
-        const configName = "Config" + name;
-        const configItemName = configName + "Data";
-        let vars = "";
-        let datas = "";
-        keys.forEach((value, index) => {
-            const desc = descs[ index ] ? `/**${ descs[ index ] } */\n\t` : "";
-            const tsType = this.translater[ types[ index ] ].tsType || (subTypeNames[ index ] + (types[ index ] == "structArray" ? "[]" : ""));
-            vars += `\t${ desc }readonly ${ value }: ${ tsType };\n`
-        });
-        ids.forEach((v, index) => {
-            comments.length && (datas += `\t/**${ comments[ index ] || "" } */\n`);
-            datas += `\treadonly ${ v }: ${ configItemName };\n`;
-        });
-
-        let configTxt = this.configTemplate.replace(/#itemNames#/g, configItemName)
-            .replace(/#configName#/g, configName)
-            .replace(/#vars#/g, vars)
-            .replace(/#datas#/g, datas)
-        // .replace(/#subTypes#/g, subTypeContent);
-        fs.writeFileSync(path.resolve(TablesCfgDir, configName + ".d.ts"), configTxt);
-    }
-    CreateTablMgr() {
-        delete this.config.keyMap;
-        // let imports = "";
-        let vars = "";
-        Object.keys(this.config).forEach((v, index) => {
-            const configName = `Config${ v }`;
-            // imports += `import { ${configName} } from "./${configName}";\n`;
-            vars += `\t/**${ this.tableDesc[ index ] }表 */\n\treadonly ${ v }: ${ configName };\n`;
-        });
-        const mgrTxt = this.tableMgrTemplate
-            // .replace("#imports#", imports)
-            .replace("#vars#", vars);
-        fs.writeFileSync(path.resolve(TablesCfgDir, "TableManager.ts"), mgrTxt);
-    }
-
-    GetStructTypes(types: string[], keys: string[]) {
-        const structTypes: { [ key: string ]: string }[] = [];
-        const structNames: string[] = [];
-        types.forEach((v, index) => {
-            const struct = v.startsWith("struct");
-            const structArray = v.startsWith("structArray");
-            if (!struct && !structArray) {
-                structTypes.push(null);
-                structNames.push(null);
-                return;
-            }
-            let startIndex = 0;
-            struct && (types[ index ] = "struct", startIndex = 7);
-            structArray && (types[ index ] = "structArray", startIndex = 12);
-
-            const typeArr = v.substring(startIndex, v.length - 1).split("-").map(v1 => v1.split(":"));
-            const typesValue = {};
-            typeArr.forEach(v2 => {
-                this.GetKeyNum(v2[ 0 ]);
-                typesValue[ v2[ 0 ] ] = v2[ 1 ];
-            });
-            typesValue[ "__proto__" ][ "toString" ] = function () {
-                return String(Object.keys(this).sort());
-            };
-            structTypes.push(typesValue);
-            structNames.push(keys[ index ] + "Type");
-        });
-        return { structTypes, structNames };
-    }
-
-    CreateLangCode(tableData: any[][]) {
-        let content = `${ MODIFY_TIP }export const enum LangCode {\n\tNone = 0,\n`;
-        for (let i = 3; i < tableData.length; i++) {
-            const item = tableData[ i ];
-            content += `\t/**${ item[ 1 ] || "" } */\n\t_${ item[ 0 ] } = ${ item[ 0 ] },\n`;
-        }
-        content += "}";
-        fs.writeFileSync(LangPath, content);
     }
 }
 
