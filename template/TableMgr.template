@@ -20,6 +20,7 @@ class TableManager {
 	private decodeData(data: any, keyMap: any) {
 		if (data == null) return;
 		if (typeof data != "object") return;
+		const isArray = Array.isArray(data);
 		Object.keys(data).forEach((key) => {
 			const temp = data[ key ];
 			const type = temp?.constructor?.name;
@@ -27,8 +28,11 @@ class TableManager {
 				this.decodeData(temp, keyMap);
 			else if (type == "Array")
 				temp.forEach((v: any) => this.decodeData(v, keyMap));
-			data[ keyMap[ key ] ] = temp;
-			delete data[ key ];
+			if (isArray) data[ key ] = temp;
+			else {
+				data[ keyMap[ key ] ] = temp;
+				delete data[ key ];
+			}
 		});
 	}
 }
