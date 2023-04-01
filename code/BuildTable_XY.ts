@@ -4,7 +4,19 @@ import * as path from "path";
 import { BuildBase } from "./BuildBase";
 import { TableDataPath, TablesCfgDir, xlsxDir } from "./Const";
 import { GetTemplateContent, RemoveDir } from "./Utils";
-type Declare = { name: string, keys: string[], types: string[] };
+class Declare {
+    name: string;
+    keys: string[];
+    types: string[];
+    descs?: string[];
+    constructor(name: string, keys: string[], types: string[], descs?: string[]) {
+        this.name = name;
+        this.keys = keys;
+        this.types = types;
+        this.descs = descs;
+    }
+}
+
 const enum TableExportType {
     /** 整数型字段 */
     Export_Int = "Int",
@@ -187,22 +199,26 @@ export default class BuildTable_XY extends BuildBase {
                         this.config[ sht.name ] = table;
                     keys.splice(0, 2);
                     types.splice(0, 2);
-                    this.CreateTableType(keys, types, ids, sht.name);
+                    descs.splice(0, 2);
+                    this.CreateTableType(ids, keys, types, descs, sht.name);
                 });
             }
         });
         fs.writeFileSync(TableDataPath, JSON.stringify(this.config));
     }
 
-    CreateTableType(keys: string[], types: string[], ids: string[], tableName: string) {
+    /** 创建表类型接口 */
+    CreateTableType(ids: string[], keys: string[], types: string[], descs: string[], tableName: string) {
         const tableTypes = this.GetTableType(keys, types, tableName);
         const baseType = tableTypes[ 0 ];
-        tableTypes.splice(1, 0, { name: `Cfg${ tableName }`, keys: ids, types: new Array(ids.length).fill(baseType.name) });
+        baseType.descs = descs;
+        tableTypes.splice(1, 0, new Declare(`Cfg${ tableName }`, ids, new Array(ids.length).fill(baseType.name)));
         let typeContent = "";
         tableTypes.forEach(type => {
             typeContent += `declare interface ${ type.name } {\r`;
             type.keys.forEach((key, index) => {
                 if (key == BuildTable_XY.Sign_Skip || type.types[ index ] == BuildTable_XY.Sign_Skip) return;
+                if (type.descs) typeContent += `\t/** ${ type.descs[ index ] } */\r`;
                 typeContent += `\treadonly ${ key }: ${ type.types[ index ] };\r`;
             });
             typeContent += `}\r\r`;
@@ -210,9 +226,11 @@ export default class BuildTable_XY extends BuildBase {
         fs.writeFileSync(TablesCfgDir + "/Cfg" + tableName + ".d.ts", typeContent);
     }
 
+
+    /** 获取表所有字段类型集合 */
     GetTableType(keys: string[], types: string[], tableName: string) {
-        const dec: Declare = { name: `Cfg${ tableName }Data`, keys: [], types: [] };
-        const declares: Declare[] = [ dec ];
+        const dec = new Declare(`Cfg${ tableName }Data`, [], []);
+        const declares = [ dec ];
         keys.forEach((key, index) => {
             dec.keys.push(key);
             dec.types.push(this.GetTSType(types[ index ], declares, tableName));
@@ -220,6 +238,7 @@ export default class BuildTable_XY extends BuildBase {
         return declares;
     }
 
+    /** 获取字段类型 */
     GetTSType(typeStr: string, declares: Declare[], tableName: string): string {
         switch (typeStr) {
             case "int": return "number";
@@ -232,7 +251,7 @@ export default class BuildTable_XY extends BuildBase {
             case "stringmatrix": return "string[][]";
             default:
                 if (typeStr.startsWith("[") && typeStr.endsWith("]")) {
-                    const dec: Declare = { name: `Cfg${ tableName }Data${ declares.length }`, keys: [], types: [] };
+                    const dec = new Declare(`Cfg${ tableName }Data${ declares.length }`, [], []);
                     declares.push(dec);
                     const typeDesc = typeStr.substring(1, typeStr.length - 1);
                     const typeDescs = typeDesc.split("_");
