@@ -169,11 +169,11 @@ export default class BuildTable extends BuildBase {
         let { allSubTypes } = this;
         let result = MODIFY_TIP;
         allSubTypes.forEach(v => {
-            result += `declare interface ${ v.name } {\n`;
+            result += `declare interface ${ v.name } {\r`;
             Object.keys(v.type).forEach(key => {
-                result += `\t${ key }: ${ v.type[ key ] };\n`;
+                result += `\t${ key }: ${ v.type[ key ] };\r`;
             });
-            result += "}\n";
+            result += "}\r";
         });
         fs.writeFileSync(TableStructTypePath, result.trim());
     }
@@ -184,12 +184,12 @@ export default class BuildTable extends BuildBase {
         // let subTypeContent = "";
         // subTypes.forEach((v, index) => {
         //     if (!v) return;
-        //     let subContent = `export interface ${subTypeNames[index]} {\n`;
+        //     let subContent = `export interface ${subTypeNames[index]} {\r`;
         //     const subKeys = Object.keys(v);
         //     subKeys.forEach(subV => {
-        //         subContent += `\treadonly ${subV}: ${this.translater[v[subV]].tsType};\n`;
+        //         subContent += `\treadonly ${subV}: ${this.translater[v[subV]].tsType};\r`;
         //     });
-        //     subTypeContent += subContent + "}\n\n";
+        //     subTypeContent += subContent + "}\r\r";
         // });
 
         const configName = "Config" + name;
@@ -197,13 +197,13 @@ export default class BuildTable extends BuildBase {
         let vars = "";
         let datas = "";
         keys.forEach((value, index) => {
-            const desc = descs[ index ] ? `/**${ descs[ index ] } */\n\t` : "";
+            const desc = descs[ index ] ? `/**${ descs[ index ] } */\r\t` : "";
             const tsType = this.translater[ types[ index ] ].tsType || (subTypeNames[ index ] + (types[ index ] == "structArray" ? "[]" : ""));
-            vars += `\t${ desc }readonly ${ value }: ${ tsType };\n`
+            vars += `\t${ desc }readonly ${ value }: ${ tsType };\r`
         });
         ids.forEach((v, index) => {
-            comments.length && (datas += `\t/**${ comments[ index ] || "" } */\n`);
-            datas += `\treadonly ${ v }: ${ configItemName };\n`;
+            comments.length && (datas += `\t/**${ comments[ index ] || "" } */\r`);
+            datas += `\treadonly ${ v }: ${ configItemName };\r`;
         });
 
         let configTxt = this.configTemplate.replace(/#itemNames#/g, configItemName)
@@ -219,8 +219,8 @@ export default class BuildTable extends BuildBase {
         let vars = "";
         Object.keys(this.config).forEach((v, index) => {
             const configName = `Config${ v }`;
-            // imports += `import { ${configName} } from "./${configName}";\n`;
-            vars += `\t/**${ this.tableDesc[ index ] }表 */\n\treadonly ${ v }: ${ configName };\n`;
+            // imports += `import { ${configName} } from "./${configName}";\r`;
+            vars += `\t/**${ this.tableDesc[ index ] }表 */\r\treadonly ${ v }: ${ configName };\r`;
         });
         const mgrTxt = this.tableMgrTemplate
             // .replace("#imports#", imports)
@@ -259,10 +259,10 @@ export default class BuildTable extends BuildBase {
     }
 
     CreateLangCode(tableData: any[][]) {
-        let content = `${ MODIFY_TIP }export const enum LangCode {\n\tNone = 0,\n`;
+        let content = `${ MODIFY_TIP }export const enum LangCode {\r\tNone = 0,\r`;
         for (let i = 3; i < tableData.length; i++) {
             const item = tableData[ i ];
-            content += `\t/**${ item[ 1 ] || "" } */\n\t_${ item[ 0 ] } = ${ item[ 0 ] },\n`;
+            content += `\t/**${ item[ 1 ] || "" } */\r\t_${ item[ 0 ] } = ${ item[ 0 ] },\r`;
         }
         content += "}";
         fs.writeFileSync(LangPath, content);

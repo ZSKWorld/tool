@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as xlsx from "node-xlsx";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { TableDataPath, TablesCfgDir, xlsxDir } from "./Const";
+import { MODIFY_TIP, TableDataPath, TablesCfgDir, xlsxDir } from "./Const";
 import { GetTemplateContent, RemoveDir } from "./Utils";
 class Declare {
     name: string;
@@ -213,7 +213,7 @@ export default class BuildTable_XY extends BuildBase {
         const baseType = tableTypes[ 0 ];
         baseType.descs = descs;
         tableTypes.splice(1, 0, new Declare(`Cfg${ tableName }`, ids, new Array(ids.length).fill(baseType.name)));
-        let typeContent = "";
+        let typeContent = MODIFY_TIP;
         tableTypes.forEach(type => {
             typeContent += `declare interface ${ type.name } {\r`;
             type.keys.forEach((key, index) => {
