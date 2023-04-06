@@ -2,9 +2,9 @@ import * as fs from "fs";
 import * as xlsx from "node-xlsx";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { TableDataPath, TablesCfgDir, xlsxDir } from "./Const";
+import { MODIFY_TIP, TableDataPath, TablesCfgDir, xlsxDir } from "./Const";
 import { GetTemplateContent, RemoveDir } from "./Utils";
-class Declare {
+class ObjectDeclare {
     name: string;
     keys: string[];
     types: string[];
@@ -60,6 +60,7 @@ export default class BuildTable_XY extends BuildBase {
     configTemplate = GetTemplateContent("TableConfig");
     tableMgrTemplate = GetTemplateContent("TableMgr");
 
+    /** 表数据转换器 */
     translator: { [ key in TableExportType ]: (...args) => any } = {
         Bool: (str: string) => {
             return String(str).toLowerCase() == "true";
@@ -212,8 +213,8 @@ export default class BuildTable_XY extends BuildBase {
         const tableTypes = this.GetTableType(keys, types, tableName);
         const baseType = tableTypes[ 0 ];
         baseType.descs = descs;
-        tableTypes.splice(1, 0, new Declare(`Cfg${ tableName }`, ids, new Array(ids.length).fill(baseType.name)));
-        let typeContent = "";
+        tableTypes.splice(1, 0, new ObjectDeclare(`Cfg${ tableName }`, ids, new Array(ids.length).fill(baseType.name)));
+        let typeContent = MODIFY_TIP;
         tableTypes.forEach(type => {
             typeContent += `declare interface ${ type.name } {\r`;
             type.keys.forEach((key, index) => {
@@ -226,10 +227,9 @@ export default class BuildTable_XY extends BuildBase {
         fs.writeFileSync(TablesCfgDir + "/Cfg" + tableName + ".d.ts", typeContent);
     }
 
-
     /** 获取表所有字段类型集合 */
     GetTableType(keys: string[], types: string[], tableName: string) {
-        const dec = new Declare(`Cfg${ tableName }Data`, [], []);
+        const dec = new ObjectDeclare(`Cfg${ tableName }Data`, [], []);
         const declares = [ dec ];
         keys.forEach((key, index) => {
             dec.keys.push(key);
@@ -239,7 +239,7 @@ export default class BuildTable_XY extends BuildBase {
     }
 
     /** 获取字段类型 */
-    GetTSType(typeStr: string, declares: Declare[], tableName: string): string {
+    GetTSType(typeStr: string, declares: ObjectDeclare[], tableName: string): string {
         switch (typeStr) {
             case "int": return "number";
             case "string": return "string";
@@ -251,7 +251,7 @@ export default class BuildTable_XY extends BuildBase {
             case "stringmatrix": return "string[][]";
             default:
                 if (typeStr.startsWith("[") && typeStr.endsWith("]")) {
-                    const dec = new Declare(`Cfg${ tableName }Data${ declares.length }`, [], []);
+                    const dec = new ObjectDeclare(`Cfg${ tableName }Data${ declares.length }`, [], []);
                     declares.push(dec);
                     const typeDesc = typeStr.substring(1, typeStr.length - 1);
                     const typeDescs = typeDesc.split("_");
@@ -274,6 +274,7 @@ export default class BuildTable_XY extends BuildBase {
 
     }
 
+    /** 创建表管理类 */
     CreateTableMgr() {
         delete this.config.keyMap;
         let vars = "";
