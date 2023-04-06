@@ -14,7 +14,7 @@ export default class BuildView extends BuildBase {
         { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl ] },
         { sign: "Btn", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Btns" },
         { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Coms" },
-        { sign: "Render", funcs: [ this.BuildComponent ], subDir: "Renders" },
+        { sign: "Render", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Renders" },
     ];
 
     doBuild() {
@@ -64,14 +64,11 @@ export default class BuildView extends BuildBase {
                 let useComps = [];
                 uiComps.forEach((v, index) => {
                     const [ varName, varType ] = v.substring(7, v.length - 1).split(":");
-                    if (varType.toLowerCase().startsWith("com")) {
-                        compExtension += `\n\t\tthis.initView(${ varName });`;
-                    } else if (varName.toLowerCase().startsWith("btn")) {
+                    if (varName.toLowerCase().startsWith("btn")) {
                         let msgName = `On${ UpperFirst(varName, [ "_" ], "") }Click`;
                         let msgValue = `"${ filename }_${ msgName }"`;
                         messages += `\t${ msgName } = ${ msgValue },\n`;
                         sendContent += `\n\t    ${ varName }.onClick(this, this.sendMessage, [ ${ msgEnumName }.${ msgName } ]);`;
-                        compExtension += `\n\t\tthis.initView(${ varName });`;
                     } else return;
                     useComps.push(varName);
                 });
@@ -169,79 +166,91 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
     }
 
     BuildViewID() {
-        let [ btns, coms, views ] = [ "\t/**Btns */\n", "\t/**Coms */\n", "\t/**Views */\n" ];
+        let [ btns, renders, coms, views ] = [
+            "\t/**Btns */\n",
+            "\t/**Renders */\n",
+            "\t/**Coms */\n",
+            "\t/**UIs */\n"
+        ];
         const viewNames = GetAllFile(
             ViewDir, false,
-            filename => (filename.startsWith("UI") || filename.startsWith("Com") || filename.startsWith("Btn")) && filename.endsWith("View.ts"),
+            filename => filename.startsWith("Btn")
+                || filename.startsWith("Render")
+                || filename.startsWith("Com")
+                || filename.startsWith("UI"),
             filename => filename.replace(".ts", ""),
         );
         let viewCount = 0;
         viewNames.forEach(v => {
             if (v.startsWith("UI")) {
-                v = v.replace("UI", "");
                 views += `\t${ v } = "${ v }",\n`;
-                viewCount++;
             } else if (v.startsWith("Com")) {
                 coms += `\t${ v } = "${ v }",\n`;
-                viewCount++;
             } else if (v.startsWith("Btn")) {
                 btns += `\t${ v } = "${ v }",\n`;
-                viewCount++;
+            } else if (v.startsWith("Render")) {
+                renders += `\t${ v } = "${ v }",\n`;
             }
+            else
+                return;
+            viewCount++;
         });
-        if (viewCount == 0) coms = "\tNone = \"\",\n" + coms;
-        const content = this.viewIDTemplate.replace("#content#", btns + "\n" + coms + "\n" + views);
+        let combine = btns + "\n" + renders + "\n" + coms + "\n" + views;
+        if (viewCount == 0) combine = "\tNone = \"\",\n" + combine;
+        const content = this.viewIDTemplate.replace("#content#", combine);
         fs.writeFileSync(ViewIDPath, content);
     }
 
     BuildViewRegister() {
         const viewRegisterDir = path.dirname(ViewRegisterPath);
+        const mapFunc = (fileName: string) => fileName.replace(".ts", "");
+        const filterFunc = (start: string, end: string) => (fileName: string) => (!start || fileName.startsWith(start)) && (!end || fileName.endsWith(end));
 
-        const binderNames = GetAllFile(UiDir, true, filename => filename.endsWith("Binder.ts"), filename => filename.replace(".ts", ""));
-        const uiNames = GetAllFile(UiDir, true, filename => filename.startsWith("UI") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
-        const btnNames = GetAllFile(UiDir, true, filename => filename.startsWith("Btn") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
-        const comNames = GetAllFile(UiDir, true, filename => filename.startsWith("Com") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
-        const renderNames = GetAllFile(UiDir, true, filename => filename.startsWith("Render") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
+        const binderNames = GetAllFile(UiDir, true, filterFunc("", "Binder.ts"), mapFunc);
 
-        const uiViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("UI") && filename.endsWith("View.ts"), filename => filename.replace(".ts", ""));
-        const btnViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Btn") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
-        const comViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Com") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
-        const renderViewNames = GetAllFile(ViewDir, true, filename => filename.startsWith("Render") && filename.endsWith(".ts"), filename => filename.replace(".ts", ""));
-        const ctrlNames = GetAllFile(ViewCtrlDir, true, filename => filename.endsWith("Ctrl.ts"), filename => filename.replace(".ts", ""));
-        const proxyNames = GetAllFile(ViewProxyDir, true, filename => filename.endsWith("Proxy.ts"), filename => filename.replace(".ts", ""));
+        const uiNames = GetAllFile(UiDir, true, filterFunc("UI", ".ts"), mapFunc);
+        const btnNames = GetAllFile(UiDir, true, filterFunc("Btn", ".ts"), mapFunc);
+        const comNames = GetAllFile(UiDir, true, filterFunc("Com", ".ts"), mapFunc);
+        const renderNames = GetAllFile(UiDir, true, filterFunc("Render", ".ts"), mapFunc);
+
+        const uiViewNames = GetAllFile(ViewDir, true, filterFunc("UI", "View.ts"), mapFunc);
+        const btnViewNames = GetAllFile(ViewDir, true, filterFunc("Btn", ".ts"), mapFunc);
+        const comViewNames = GetAllFile(ViewDir, true, filterFunc("Com", ".ts"), mapFunc);
+        const renderViewNames = GetAllFile(ViewDir, true, filterFunc("Render", ".ts"), mapFunc);
+
+        const ctrlNames = GetAllFile(ViewCtrlDir, true, filterFunc("", "Ctrl.ts"), mapFunc);
+        const proxyNames = GetAllFile(ViewProxyDir, true, filterFunc("", "Proxy.ts"), mapFunc);
 
         let [ BinderCode, ExtensionCode, RegisterCode ] = [ "", "", "" ];
         binderNames.forEach(v => {
             const basename = path.basename(v);
             BinderCode += `\t\t${ basename }.bindAll();\n`
         });
-        const addExtAndRegistCode = (arr: string[], desc: string, sign: string, hasRegist: boolean) => {
+        const addExtAndRegistCode = (arr: string[], desc: string) => {
             ExtensionCode += `\n\t\t//${ desc }\n`;
-            hasRegist && (RegisterCode += `\n\t\t//${ desc }\n`);
+            RegisterCode += `\n\t\t//${ desc }\n`;
             arr.forEach(v => {
                 const basename = path.basename(v);
                 ExtensionCode += `\t\tfgui.UIObjectFactory.setExtension(${ basename }.URL, ${ basename }View);\n`;
-                if (hasRegist) {
-                    let proxyName = basename + "Proxy";
-                    proxyName = proxyNames.find(v1 => v1.endsWith(proxyName)) ? ", " + proxyName : "";
-                    RegisterCode += `\t\tregister(ViewID.${ basename.replace(sign, "") }View, ${ basename }View, ${ basename + "Ctrl" }${ proxyName });\n`;
-                }
+                let proxyName = basename + "Proxy";
+                proxyName = proxyNames.find(v1 => v1.endsWith(proxyName)) ? ", " + proxyName : "";
+                RegisterCode += `\t\tregister(ViewID.${ basename }View, ${ basename }View, ${ basename + "Ctrl" }${ proxyName });\n`;
             });
         }
-        addExtAndRegistCode(btnNames, "Btns", "", true);
-        addExtAndRegistCode(comNames, "Coms", "", true);
-        addExtAndRegistCode(renderNames, "Renders", "Render", false);
-        addExtAndRegistCode(uiNames, "Views", "UI", true);
+        addExtAndRegistCode(btnNames, "Btns");
+        addExtAndRegistCode(renderNames, "Renders");
+        addExtAndRegistCode(comNames, "Coms");
+        addExtAndRegistCode(uiNames, "UIs");
 
         let Import = [
             `import { ViewID } from "./ViewID";\n`,
             `import { uiMgr } from "./UIManager";\n`,
             `import { Logger } from "../../libs/utils/Logger";\n`
         ];
-        const addImport = (arr: string[], has: boolean) => {
+        const addImport = (arr: string[], hasDefault: boolean) => {
             arr.forEach(v => {
                 const basename = path.basename(v);
-                Import.push(`import ${ has ? "{ " : "" }${ basename } ${ has ? "} " : "" }from "${ path.relative(viewRegisterDir, v).replace(/\\/g, "/") }";\n`);
+                Import.push(`import ${ hasDefault ? "{ " : "" }${ basename } ${ hasDefault ? "} " : "" }from "${ path.relative(viewRegisterDir, v).replace(/\\/g, "/") }";\n`);
             });
         }
         addImport(binderNames, false);
@@ -254,6 +263,7 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
         addImport(btnViewNames, true);
         addImport(comViewNames, true);
         addImport(renderViewNames, true);
+
         addImport(ctrlNames, true);
         addImport(proxyNames, true);
 

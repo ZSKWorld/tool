@@ -7,10 +7,10 @@ export const enum #fileName#Msg {
 }
 
 export class #className# extends ExtensionClass<ViewExtension, #fileName#>(#fileName#) {
-    static readonly PkgRes = ResPath.UIPath.#packageName#;
+    static readonly PkgRes = ResPath.PkgPath.#packageName#;
 
 	override onCreate(): void {
-        #allComp##compExtension#
+        #allComp#
     }
 
 }

@@ -37,8 +37,8 @@ export default class BuildResPath extends BuildBase{
         //     content += temp;
         // });
         if (isUI) {
-            content += this.buildEnum("UIName", false, dirName, files, ".zip");
-            content += "\n" + this.buildEnum("UIPath", true, dirName, files, ".zip");
+            content += this.buildEnum("PkgName", false, dirName, files, ".zip");
+            content += "\n" + this.buildEnum("PkgPath", true, dirName, files, ".zip");
         } else if (isFont) {
             content += this.buildEnum("FontName", false, dirName, files);
             content += "\n" + this.buildEnum("FontPath", true, dirName, files);
