@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { ResPathPathNoExt, UiDir, UtilPath, ViewCtrlDir, ViewDir, ViewIDPath, ViewInterfacePath, ViewProxyDir, ViewRegisterPath } from "./Const";
+import { ResPathPathNoExt, UiDir, ViewCtrlDir, ViewDir, ViewIDPath, ViewProxyDir, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir, UpperFirst } from "./Utils";
 export default class BuildView extends BuildBase {
     private viewTemplate = GetTemplateContent("View");
@@ -149,22 +149,6 @@ export default class BuildView extends BuildBase {
         }
     }
 
-    BuildComponent(dirPath: string, filename: string, subDir: string) {
-        var compDir = path.resolve(ViewDir, path.basename(dirPath) + "/" + subDir);
-        MakeDir(compDir);
-        const compCls = filename + "View";
-        const compPath = path.resolve(compDir, compCls + ".ts");
-        if (!fs.existsSync(compPath)) {
-            const filePath = path.resolve(dirPath, filename);
-            let content = `import ${ filename } from "${ path.relative(compDir, filePath).replace(/\\/g, "/") }";
-import { ExtensionClass } from "${ path.relative(compDir, UtilPath.replace(".ts", "")).replace(/\\/g, "/") }";
-import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.replace(".ts", "")).replace(/\\/g, "/") }";
-\nexport class ${ compCls } extends ExtensionClass<GComponentExtend, ${ filename }>(${ filename }) {\n\n}`;
-            console.log(compCls);
-            fs.writeFileSync(compPath, content);
-        }
-    }
-
     BuildViewID() {
         let [ btns, renders, coms, views ] = [
             "\t/**Btns */\n",
@@ -243,9 +227,7 @@ import { GComponentExtend } from "${ path.relative(compDir, ViewInterfacePath.re
         addExtAndRegistCode(uiNames, "UIs");
 
         let Import = [
-            `import { ViewID } from "./ViewID";\n`,
-            `import { uiMgr } from "./UIManager";\n`,
-            `import { Logger } from "../../libs/utils/Logger";\n`
+            `import { ViewID } from "./ViewID";\n`
         ];
         const addImport = (arr: string[], hasDefault: boolean) => {
             arr.forEach(v => {
