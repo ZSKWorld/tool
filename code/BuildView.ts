@@ -11,10 +11,10 @@ export default class BuildView extends BuildBase {
     private viewRegisterTemplate = GetTemplateContent("ViewRegister");
 
     protected buildFilter = [
-        { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl ] },
-        { sign: "Btn", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Btns" },
-        { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Coms" },
-        { sign: "Render", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Renders" },
+        { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ] },
+        { sign: "Btn", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Btns" },
+        { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Coms" },
+        { sign: "Render", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Renders" },
     ];
 
     doBuild() {

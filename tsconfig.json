@@ -5,6 +5,7 @@
     "noEmitHelpers": true,
     "sourceMap": true,
     "experimentalDecorators": true,
+    "moduleResolution": "node"
   },
   "exclude": [
     "node_modules",
