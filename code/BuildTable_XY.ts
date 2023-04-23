@@ -59,7 +59,6 @@ export default class BuildTable_XY extends BuildBase {
     config = { keyMap: {} };
     configTemplate = GetTemplateContent("TableConfig");
     tableMgrTemplate = GetTemplateContent("TableMgr");
-    tableMgrInterfaceTemplate = GetTemplateContent("ITableMgr");
 
     /** 表数据转换器 */
     translator: { [ key in TableExportType ]: (...args) => any } = {
@@ -285,9 +284,6 @@ export default class BuildTable_XY extends BuildBase {
         });
         const mgrTxt = this.tableMgrTemplate.replace("#vars#", vars);
         fs.writeFileSync(path.resolve(TablesCfgDir, "TableManager.ts"), mgrTxt);
-
-        const mgrInterfaceTxt = this.tableMgrInterfaceTemplate.replace("#vars#", vars);
-        fs.writeFileSync(path.resolve(TablesCfgDir, "ITableManager.d.ts"), mgrInterfaceTxt);
     }
 }
 
