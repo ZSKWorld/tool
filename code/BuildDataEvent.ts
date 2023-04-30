@@ -22,7 +22,7 @@ export class BuildDataEvent extends BuildBase {
         let context = MODIFY_TIP + "export const enum UserDataEvent {\r";
         infos.forEach(v => {
             context += `\t//${ v.name }\r`;
-            v.fields.forEach(f => context += `\t${ v.name.substring(1) }_${ UpperFirst(f) }_Changed = "${ v.name.substring(1) }_${ f }_changed",\r`);
+            v.fields.forEach(f => context += `\t${ v.name.substring(1) }_${ UpperFirst(f) }_Changed = "${ v.name.substring(1).toLocaleLowerCase() }_${ f.toLocaleLowerCase() }_changed",\r`);
         });
         context += "}";
         fs.writeFileSync(UserDataEventPath, context);

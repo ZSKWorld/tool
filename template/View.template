@@ -1,4 +1,4 @@
-import #fileName# from "#subDir#../../ui/#packageName#/#fileName#";
+import #fileName# from "#viewPath#";
 #imports#
 export const enum #fileName#Msg {
 #messages#

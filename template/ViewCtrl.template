@@ -1,5 +1,5 @@
-import { BaseViewCtrl } from "#hasSubDir#../../core/BaseViewCtrl";
-import { #viewMsg#, #viewClass# } from "#hasSubDir#../../view/#packageName#/#subDir##viewClass#";
+import { BaseViewCtrl } from "#baseViewCtrlPath#";
+import { #viewMsg#, #viewClass# } from "#viewPath#";
 
 export interface #dataName# {
 

@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { ResPathPathNoExt, UiDir, ViewCtrlDir, ViewDir, ViewIDPath, ViewProxyDir, ViewRegisterPath } from "./Const";
+import { BaseProxyPath, BaseViewCtrlPath, ResPathPathNoExt, UiDir, ViewDir, ViewIDPath, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir, UpperFirst } from "./Utils";
 export default class BuildView extends BuildBase {
     private viewTemplate = GetTemplateContent("View");
@@ -40,7 +40,7 @@ export default class BuildView extends BuildBase {
     }
 
     BuildView(dirPath: string, filename: string, subDir: string = "") {
-        const viewDir = path.resolve(ViewDir, path.basename(dirPath) + "/" + subDir);
+        const viewDir = path.resolve(ViewDir, path.basename(dirPath) + "/view/" + subDir);
         MakeDir(viewDir);
         const [ viewCls, viewPath, pkgName ] = [
             filename + "View",
@@ -49,7 +49,7 @@ export default class BuildView extends BuildBase {
         ];
         if (!fs.existsSync(viewPath)) {
             let content = this.viewTemplate;
-            content = content.replace(/#subDir#/g, subDir ? "../" : "")
+            content = content.replace(/#viewPath#/g, path.relative(viewDir, path.resolve(dirPath, filename)).replace(/\\/g, "/").replace(/\.ts/g, ""))
                 .replace(/#className#/g, viewCls)
                 .replace(/#packageName#/g, pkgName)
                 .replace(/#fileName#/g, filename);
@@ -88,20 +88,22 @@ export default class BuildView extends BuildBase {
     }
 
     BuildCtrl(dirPath: string, filename: string, subDir: string) {
-        const _ctrlDir = path.resolve(ViewCtrlDir, path.basename(dirPath) + "/" + subDir);
+        const _viewDir = path.resolve(ViewDir, path.basename(dirPath) + "/view/" + subDir);
+        const _ctrlDir = path.resolve(ViewDir, path.basename(dirPath) + "/controller/" + subDir);
         MakeDir(_ctrlDir);
-        const [ viewCls, viewMsg, ctrlCls, dataName, ctrlPath, pkgName ] = [
+        const [ viewCls, viewMsg, ctrlCls, dataName, viewPath,ctrlPath, pkgName ] = [
             filename + "View",
             filename + "Msg",
             filename + "Ctrl",
             filename + "Data",
+            path.resolve(_viewDir, filename + "View.ts"),
             path.resolve(_ctrlDir, filename + "Ctrl.ts"),
             path.basename(dirPath),
         ];
         if (!fs.existsSync(ctrlPath)) {
             let content = this.ctrlTemplate;
-            content = content.replace(/#hasSubDir#/g, subDir ? "../" : "")
-                .replace(/#subDir#/g, subDir ? `${ subDir }/` : "")
+            content = content.replace(/#baseViewCtrlPath#/g, path.relative(_ctrlDir, BaseViewCtrlPath).replace(/\\/g, "/").replace(/\.ts/g, ""))
+                .replace(/#viewPath#/g, path.relative(_ctrlDir, viewPath).replace(/\\/g, "/").replace(/\.ts/g, ""))
                 .replace(/#className#/g, ctrlCls)
                 .replace(/#packageName#/g, pkgName)
                 .replace(/#viewClass#/g, viewCls)
@@ -130,8 +132,8 @@ export default class BuildView extends BuildBase {
     }
 
     BuildProxy(dirPath: string, filename: string, subDir: string) {
-        const _ctrlDir = path.resolve(ViewCtrlDir, path.basename(dirPath) + "/" + subDir);
-        const _proxyDir = path.resolve(ViewProxyDir, path.basename(dirPath) + "/" + subDir);
+        const _ctrlDir = path.resolve(ViewDir, path.basename(dirPath) + "/controller/" + subDir);
+        const _proxyDir = path.resolve(ViewDir, path.basename(dirPath) + "/proxy/" + subDir);
         MakeDir(_proxyDir);
         const [ ctrlCls, proxyCls, ctrlPath, proxyPath ] = [
             filename + "Ctrl",
@@ -141,7 +143,7 @@ export default class BuildView extends BuildBase {
         ];
         if (!fs.existsSync(proxyPath)) {
             let content = this.proxyTemplate;
-            content = content.replace(/#hasSubDir#/g, subDir ? "../" : "")
+            content = content.replace(/#baseProxyPath#/g, path.relative(_proxyDir,BaseProxyPath).replace(/\\/g, "/").replace(/\.ts/g, ""))
                 .replace(/#viewCtrlPath#/g, path.relative(_proxyDir, ctrlPath).replace(/\\/g, "/"))
                 .replace(/#proxyName#/g, proxyCls)
                 .replace(/#viewCtrl#/g, ctrlCls);
@@ -197,13 +199,13 @@ export default class BuildView extends BuildBase {
         const comNames = GetAllFile(UiDir, true, filterFunc("Com", ".ts"), mapFunc);
         const renderNames = GetAllFile(UiDir, true, filterFunc("Render", ".ts"), mapFunc);
 
-        const uiViewNames = GetAllFile(ViewDir, true, filterFunc("UI", "View.ts"), mapFunc);
+        const uiViewNames = GetAllFile(ViewDir, true, filterFunc("UI", ".ts"), mapFunc);
         const btnViewNames = GetAllFile(ViewDir, true, filterFunc("Btn", ".ts"), mapFunc);
         const comViewNames = GetAllFile(ViewDir, true, filterFunc("Com", ".ts"), mapFunc);
         const renderViewNames = GetAllFile(ViewDir, true, filterFunc("Render", ".ts"), mapFunc);
 
-        const ctrlNames = GetAllFile(ViewCtrlDir, true, filterFunc("", "Ctrl.ts"), mapFunc);
-        const proxyNames = GetAllFile(ViewProxyDir, true, filterFunc("", "Proxy.ts"), mapFunc);
+        const ctrlNames = GetAllFile(ViewDir, true, filterFunc("", "Ctrl.ts"), mapFunc);
+        const proxyNames = GetAllFile(ViewDir, true, filterFunc("", "Proxy.ts"), mapFunc);
 
         let [ BinderCode, ExtensionCode, RegisterCode ] = [ "", "", "" ];
         binderNames.forEach(v => {
@@ -246,9 +248,6 @@ export default class BuildView extends BuildBase {
         addImport(btnViewNames, true);
         addImport(comViewNames, true);
         addImport(renderViewNames, true);
-
-        addImport(ctrlNames, true);
-        addImport(proxyNames, true);
 
         let content = this.viewRegisterTemplate
             .replace("#import#", Import.sort().join(""))
