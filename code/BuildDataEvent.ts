@@ -17,7 +17,7 @@ export class BuildDataEvent extends BuildBase {
         const infos: IIterfaceInfo[] = [];
         files.forEach(v => {
             const info = this.getFileInfo(UserDataInterfaceDir + "/" + v);
-            infos.push(info);
+            infos.push(...info);
         });
         let context = MODIFY_TIP + "export const enum UserDataEvent {\r";
         infos.forEach(v => {
@@ -32,23 +32,28 @@ export class BuildDataEvent extends BuildBase {
     private getFileInfo(filePath: string) {
         const context = fs.readFileSync(filePath, "utf-8");
         const sourceFile = ts.createSourceFile('info.d.ts', context, ts.ScriptTarget.ES2022);
-        const info: IIterfaceInfo = { name: "", fields: [], methods: [] };
-        this.getInterfaceInfo(sourceFile, info);
-        return info;
+        const infos: IIterfaceInfo[] = [];
+        this.decodeFile(sourceFile, infos);
+        return infos;
     }
 
-    private getInterfaceInfo(node: ts.Node, info: IIterfaceInfo) {
+    private decodeFile(node: ts.Node, infos: IIterfaceInfo[]) {
         ts.forEachChild(node, child => {
             if (ts.isInterfaceDeclaration(child)) {
-                info.name = child.name.text;
-                this.getInterfaceInfo(child, info);
-            } else if (ts.isPropertySignature(child)) {
+                infos.push(this.decodeInterface(child));
+            }
+        });
+    }
+
+    private decodeInterface(node: ts.InterfaceDeclaration) {
+        const info: IIterfaceInfo = { name: node.name.text, fields: [], methods: [] };
+        ts.forEachChild(node, child => {
+            if (ts.isPropertySignature(child)) {
                 info.fields.push(child.name[ "text" ]);
             } else if (ts.isMethodSignature(child)) {
                 info.methods.push(child.name[ "text" ]);
-            } else {
-                this.getInterfaceInfo(child, info);
             }
         });
+        return info;
     }
 }

@@ -1,9 +1,8 @@
 import * as readline from "readline";
 import { BuildBase } from "./BuildBase";
+import BuildConfig from "./BuildConfig";
 import { BuildDataEvent } from "./BuildDataEvent";
 import BuildResPath from "./BuildResPath";
-import BuildTable from "./BuildTable";
-import BuildTable_XY from "./BuildTable_XY";
 import BuildView from "./BuildView";
 import { Logger } from "./Console";
 
@@ -16,9 +15,8 @@ export default class BatMain {
     constructor() {
         const act: Act[] = [
             { desc: "创建 View & ViewCtrl & ViewProxy", cls: BuildView },
-            { desc: "导出表配置", cls: BuildTable },
+            { desc: "导出表配置", cls: BuildConfig },
             { desc: "更新资源路径", cls: BuildResPath },
-            { desc: "小严的表", cls: BuildTable_XY },
             { desc: "用户数据事件", cls: BuildDataEvent },
         ];
         let tip = "选择要进行的操作：\n0. 全部执行\n";

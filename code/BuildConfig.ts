@@ -2,22 +2,24 @@ import * as fs from "fs";
 import * as xlsx from "node-xlsx";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { MODIFY_TIP, TableDataPath, TablesCfgDir, xlsxDir } from "./Const";
+import { CfgDataPath, CfgDir, MODIFY_TIP, xlsxDir } from "./Const";
 import { GetTemplateContent, RemoveDir } from "./Utils";
 class ObjectDeclare {
     name: string;
     keys: string[];
     types: string[];
     descs?: string[];
-    constructor(name: string, keys: string[], types: string[], descs?: string[]) {
+    extend?: string[];
+    constructor(name: string, keys: string[], types: string[], descs?: string[], extend?: string[]) {
         this.name = name;
         this.keys = keys;
         this.types = types;
         this.descs = descs;
+        this.extend = extend || [ "ICfgReadOnly" ];
     }
 }
 
-const enum TableExportType {
+const enum CfgExportType {
     /** 整数型字段 */
     Export_Int = "Int",
     /** 字符型字段 */
@@ -48,7 +50,7 @@ const enum TableExportType {
     Export_Skip = "Skip",
 }
 
-export default class BuildTable_XY extends BuildBase {
+export default class BuildConfig extends BuildBase {
     static readonly Sign_Types = "$";
     static readonly Sign_Keys = "!";
     static readonly Sign_Descs = "#";
@@ -57,11 +59,12 @@ export default class BuildTable_XY extends BuildBase {
     keyIndex = 1;
     keyNumMap = {};
     config = { keyMap: {} };
-    configTemplate = GetTemplateContent("TableConfig");
-    tableMgrTemplate = GetTemplateContent("TableMgr");
+    cfgTemplate = GetTemplateContent("ConfigTemp");
+    cfgExtTemplate = GetTemplateContent("CfgExtension");
+    cfgMgrTemplate = GetTemplateContent("CfgMgr");
 
     /** 表数据转换器 */
-    translator: { [ key in TableExportType ]: (...args) => any } = {
+    translator: { [ key in CfgExportType ]: (...args) => any } = {
         Bool: (str: string) => {
             return String(str).toLowerCase() == "true";
         },
@@ -92,10 +95,11 @@ export default class BuildTable_XY extends BuildBase {
         },
         Object: (str: string, type: string) => {
             str = str == null ? "" : String(str);
-            type = type.replace(/\"/g, "").substring(1, type.length - 1);
+            let tType = type.replace(/\"/g, "");
+            tType = tType.substring(1, tType.length - 1);
             const obj = {};
-            const values = str.split("_");
-            type.split("_").forEach((v, index) => {
+            const values = str.split(",");
+            tType.split(",").forEach((v, index) => {
                 const [ key, vType ] = v.split(":");
                 obj[ this.GetKeyNum(key) ] = this.translator[ this.GetExportType(vType) ](values[ index ], vType);
             });
@@ -103,7 +107,7 @@ export default class BuildTable_XY extends BuildBase {
         },
         ObjectArray: (str: string, type: string) => {
             str = str == null ? "" : String(str);
-            const values = str.split("|");
+            const values = str.split(";");
             const realType = type.replace("array", "");
             return values.map(v => this.translator.Object(v, realType));
         },
@@ -119,12 +123,14 @@ export default class BuildTable_XY extends BuildBase {
     };
 
     doBuild() {
-        RemoveDir(TablesCfgDir);
+        RemoveDir(CfgDir);
+        fs.mkdirSync(CfgDir);
         this.CreateConfig();
-        this.CreateTableMgr();
+        this.CreateCfgMgr();
+        fs.writeFileSync(path.resolve(CfgDir, "CfgExtension.d.ts"), this.cfgExtTemplate);
     }
 
-    GetKeyNum(key: string) {
+    private GetKeyNum(key: string) {
         let keyNum = this.keyNumMap[ key ];
         if (!keyNum) {
             keyNum = this.keyIndex++;
@@ -134,37 +140,36 @@ export default class BuildTable_XY extends BuildBase {
         return keyNum;
     }
 
-    GetExportType(str: string) {
+    private GetExportType(str: string) {
         switch (str) {
-            case "int": return TableExportType.Export_Int;
-            case "string": return TableExportType.Export_String;
-            case "bool": return TableExportType.Export_Bool;
-            case "date": return TableExportType.Export_Date;
-            case "intarray": return TableExportType.Export_IntArray;
-            case "intmatrix": return TableExportType.Export_IntMatrix;
-            case "stringarray": return TableExportType.Export_StringArray;
-            case "stringmatrix": return TableExportType.Export_StringMatrix;
+            case "int": return CfgExportType.Export_Int;
+            case "string": return CfgExportType.Export_String;
+            case "bool": return CfgExportType.Export_Bool;
+            case "date": return CfgExportType.Export_Date;
+            case "intarray": return CfgExportType.Export_IntArray;
+            case "intmatrix": return CfgExportType.Export_IntMatrix;
+            case "stringarray": return CfgExportType.Export_StringArray;
+            case "stringmatrix": return CfgExportType.Export_StringMatrix;
             default:
-                if (str.startsWith("[") && str.endsWith("]")) return TableExportType.Export_Object;
-                else if (str.startsWith("array[") && str.endsWith("]")) return TableExportType.Export_ObjectArray;
-                else if (str.startsWith("matrix[") && str.endsWith("]")) return TableExportType.Export_ObjectMatrix;
-                else if (str.startsWith("type")) return TableExportType.Export_Type;
-                else if (str.startsWith("lang")) return TableExportType.Export_Lang;
-                else if (str.startsWith("skip")) return TableExportType.Export_Skip;
+                if (str.startsWith("[") && str.endsWith("]")) return CfgExportType.Export_Object;
+                else if (str.startsWith("array[") && str.endsWith("]")) return CfgExportType.Export_ObjectArray;
+                else if (str.startsWith("matrix[") && str.endsWith("]")) return CfgExportType.Export_ObjectMatrix;
+                else if (str.startsWith("type")) return CfgExportType.Export_Type;
+                else if (str.startsWith("lang")) return CfgExportType.Export_Lang;
+                else if (str.startsWith("skip")) return CfgExportType.Export_Skip;
                 else throw new Error("unknown type: " + str);
         }
     }
 
-    CreateConfig() {
+    private CreateConfig() {
         const translator = this.translator;
-        fs.mkdirSync(TablesCfgDir);
         fs.readdirSync(xlsxDir).forEach(files => {
             if (files.endsWith(".xlsm")) {
                 let sheets: { name: string, data: string[][] }[] = xlsx.parse(path.resolve(xlsxDir, files)) as any;
                 //第一个sheet是使用说明,不要
                 sheets.shift();
                 sheets.forEach(sht => {
-                    const table = {};
+                    const cfg = {};
                     const datas = sht.data;
                     const [ types, keys, descs, descs2 ] = datas.splice(0, 4);
                     const typeCnt = types.length;
@@ -175,7 +180,7 @@ export default class BuildTable_XY extends BuildBase {
                     for (let i = 1; i < typeCnt; i++) {
                         const type = types[ i ];
                         //跳过忽略的列
-                        if (type == BuildTable_XY.Sign_Skip) continue;
+                        if (type == BuildConfig.Sign_Skip) continue;
                         const key = keys[ i ];
                         const desc = descs[ i ];
                         const desc2 = descs2[ i ];
@@ -184,62 +189,63 @@ export default class BuildTable_XY extends BuildBase {
                             //跳过没有id的行
                             if (!row[ 2 ]) continue;
                             //跳过忽略的行
-                            if (row[ 0 ] == BuildTable_XY.Sign_Ignore) continue;
+                            if (row[ 0 ] == BuildConfig.Sign_Ignore) continue;
                             i == 2 && ids.push(row[ 2 ]);
-                            const item = table[ row[ 2 ] ] = table[ row[ 2 ] ] || {};
+                            const item = cfg[ row[ 2 ] ] = cfg[ row[ 2 ] ] || {};
                             try {
                                 const value = translator[ this.GetExportType(type) ](row[ i ], type);
                                 item[ this.GetKeyNum(key) ] = value;
                             } catch (error) {
-                                throw new Error(sht.name + "===" + i);
+                                console.log(sht.name + "===" + i + "===" + row[ i ] + "===" + type);
+                                throw error;
                             }
                             hasData = true;
                         }
                     }
                     if (hasData)
-                        this.config[ sht.name ] = table;
+                        this.config[ sht.name ] = cfg;
                     keys.splice(0, 2);
                     types.splice(0, 2);
                     descs.splice(0, 2);
-                    this.CreateTableType(ids, keys, types, descs, sht.name);
+                    this.CreateCfgType(ids, keys, types, descs, sht.name);
                 });
             }
         });
-        fs.writeFileSync(TableDataPath, JSON.stringify(this.config));
+        fs.writeFileSync(CfgDataPath, JSON.stringify(this.config));
     }
 
     /** 创建表类型接口 */
-    CreateTableType(ids: string[], keys: string[], types: string[], descs: string[], tableName: string) {
-        const tableTypes = this.GetTableType(keys, types, tableName);
-        const baseType = tableTypes[ 0 ];
+    private CreateCfgType(ids: string[], keys: string[], types: string[], descs: string[], cfgName: string) {
+        const cfgTypes = this.GetCfgType(keys, types, cfgName);
+        const baseType = cfgTypes[ 0 ];
         baseType.descs = descs;
-        tableTypes.splice(1, 0, new ObjectDeclare(`Cfg${ tableName }`, ids, new Array(ids.length).fill(baseType.name)));
+        cfgTypes.splice(0, 0, new ObjectDeclare(`Cfg${ cfgName }`, ids, new Array(ids.length).fill(baseType.name), null, [ `ICfgExtension<${ baseType.name }>`, `ICfgReadOnly<${ baseType.name }>` ]));
         let typeContent = MODIFY_TIP;
-        tableTypes.forEach(type => {
-            typeContent += `declare interface ${ type.name } {\r`;
+        cfgTypes.forEach(type => {
+            typeContent += `declare interface ${ type.name } extends ${ type.extend.join(", ") } {\r`;
             type.keys.forEach((key, index) => {
-                if (key == BuildTable_XY.Sign_Skip || type.types[ index ] == BuildTable_XY.Sign_Skip) return;
+                if (key == BuildConfig.Sign_Skip || type.types[ index ] == BuildConfig.Sign_Skip) return;
                 if (type.descs) typeContent += `\t/** ${ type.descs[ index ] } */\r`;
                 typeContent += `\treadonly ${ key }: ${ type.types[ index ] };\r`;
             });
             typeContent += `}\r\r`;
         });
-        fs.writeFileSync(TablesCfgDir + "/Cfg" + tableName + ".d.ts", typeContent);
+        fs.writeFileSync(CfgDir + "/Cfg" + cfgName + ".d.ts", typeContent);
     }
 
     /** 获取表所有字段类型集合 */
-    GetTableType(keys: string[], types: string[], tableName: string) {
-        const dec = new ObjectDeclare(`Cfg${ tableName }Data`, [], []);
+    private GetCfgType(keys: string[], types: string[], cfgName: string) {
+        const dec = new ObjectDeclare(`Cfg${ cfgName }Data`, [], []);
         const declares = [ dec ];
         keys.forEach((key, index) => {
             dec.keys.push(key);
-            dec.types.push(this.GetTSType(types[ index ], declares, tableName));
+            dec.types.push(this.GetTSType(types[ index ], declares, cfgName));
         });
         return declares;
     }
 
     /** 获取字段类型 */
-    GetTSType(typeStr: string, declares: ObjectDeclare[], tableName: string): string {
+    private GetTSType(typeStr: string, declares: ObjectDeclare[], cfgName: string): string {
         switch (typeStr) {
             case "int": return "number";
             case "string": return "string";
@@ -251,39 +257,40 @@ export default class BuildTable_XY extends BuildBase {
             case "stringmatrix": return "string[][]";
             default:
                 if (typeStr.startsWith("[") && typeStr.endsWith("]")) {
-                    const dec = new ObjectDeclare(`Cfg${ tableName }Data${ declares.length }`, [], []);
+                    const dec = new ObjectDeclare(`Cfg${ cfgName }Data${ declares.length }`, [], []);
                     declares.push(dec);
-                    const typeDesc = typeStr.substring(1, typeStr.length - 1);
-                    const typeDescs = typeDesc.split("_");
+                    let typeDesc = typeStr.replace(/\"/g, "");
+                    typeDesc = typeDesc.substring(1, typeDesc.length - 1);
+                    const typeDescs = typeDesc.split(",");
                     typeDescs.forEach(typeDesc => {
                         const [ key, type ] = typeDesc.split(":");
                         dec.keys.push(key);
-                        dec.types.push(this.GetTSType(type, declares, tableName));
+                        dec.types.push(this.GetTSType(type, declares, cfgName));
                     });
                     return dec.name;
                 }
                 else if (typeStr.startsWith("array[") && typeStr.endsWith("]"))
-                    return this.GetTSType(typeStr.substring(5), declares, tableName) + "[]";
+                    return this.GetTSType(typeStr.substring(5), declares, cfgName) + "[]";
                 else if (typeStr.startsWith("matrix[") && typeStr.endsWith("]"))
-                    return this.GetTSType(typeStr.substring(6), declares, tableName) + "[][]";
+                    return this.GetTSType(typeStr.substring(6), declares, cfgName) + "[][]";
                 else if (typeStr.startsWith("type")) return "string";//this.GetTSType(typeDesc);
                 else if (typeStr.startsWith("lang")) return "any";
                 else if (typeStr.startsWith("skip")) return "any";
-                else throw new Error("unknown type: " + typeStr + " " + tableName);
+                else throw new Error("unknown type: " + typeStr + "===" + cfgName);
         }
 
     }
 
     /** 创建表管理类 */
-    CreateTableMgr() {
+    private CreateCfgMgr() {
         delete this.config.keyMap;
         let vars = "";
         Object.keys(this.config).forEach((v, index) => {
             const configName = `Cfg${ v }`;
             vars += `\treadonly ${ v }: ${ configName };\n`;
         });
-        const mgrTxt = this.tableMgrTemplate.replace("#vars#", vars);
-        fs.writeFileSync(path.resolve(TablesCfgDir, "TableManager.ts"), mgrTxt);
+        const mgrTxt = this.cfgMgrTemplate.replace("#vars#", vars);
+        fs.writeFileSync(path.resolve(CfgDir, "CfgManager.ts"), mgrTxt);
     }
 }
 

@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
+import { Logger } from "./Console";
 import { BaseProxyPath, BaseViewCtrlPath, ResPathPathNoExt, UiDir, ViewDir, ViewIDPath, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir, UpperFirst } from "./Utils";
 export default class BuildView extends BuildBase {
@@ -19,11 +20,12 @@ export default class BuildView extends BuildBase {
 
     doBuild() {
         this.CheckBuild(UiDir);
+        this.RemoveUnused();
         this.BuildViewID();
         this.BuildViewRegister();
     }
 
-    CheckBuild(dirPath: string) {
+    private CheckBuild(dirPath: string) {
         fs.readdirSync(dirPath).forEach(filename => {
             const filePath = path.resolve(dirPath, filename);
             const info = fs.statSync(filePath);
@@ -39,7 +41,7 @@ export default class BuildView extends BuildBase {
         })
     }
 
-    BuildView(dirPath: string, filename: string, subDir: string = "") {
+    private BuildView(dirPath: string, filename: string, subDir: string = "") {
         const viewDir = path.resolve(ViewDir, path.basename(dirPath) + "/view/" + subDir);
         MakeDir(viewDir);
         const [ viewCls, viewPath, pkgName ] = [
@@ -68,7 +70,7 @@ export default class BuildView extends BuildBase {
                         let msgName = `On${ UpperFirst(varName, [ "_" ], "") }Click`;
                         let msgValue = `"${ filename }_${ msgName }"`;
                         messages += `\t${ msgName } = ${ msgValue },\n`;
-                        sendContent += `\n\t    ${ varName }.onClick(this, this.sendMessage, [ ${ msgEnumName }.${ msgName } ]);`;
+                        sendContent += `\n\t\t${ varName }.onClick(this, this.sendMessage, [ ${ msgEnumName }.${ msgName } ]);`;
                     } else return;
                     useComps.push(varName);
                 });
@@ -87,11 +89,11 @@ export default class BuildView extends BuildBase {
         }
     }
 
-    BuildCtrl(dirPath: string, filename: string, subDir: string) {
+    private BuildCtrl(dirPath: string, filename: string, subDir: string) {
         const _viewDir = path.resolve(ViewDir, path.basename(dirPath) + "/view/" + subDir);
         const _ctrlDir = path.resolve(ViewDir, path.basename(dirPath) + "/controller/" + subDir);
         MakeDir(_ctrlDir);
-        const [ viewCls, viewMsg, ctrlCls, dataName, viewPath,ctrlPath, pkgName ] = [
+        const [ viewCls, viewMsg, ctrlCls, dataName, viewPath, ctrlPath, pkgName ] = [
             filename + "View",
             filename + "Msg",
             filename + "Ctrl",
@@ -131,7 +133,7 @@ export default class BuildView extends BuildBase {
         }
     }
 
-    BuildProxy(dirPath: string, filename: string, subDir: string) {
+    private BuildProxy(dirPath: string, filename: string, subDir: string) {
         const _ctrlDir = path.resolve(ViewDir, path.basename(dirPath) + "/controller/" + subDir);
         const _proxyDir = path.resolve(ViewDir, path.basename(dirPath) + "/proxy/" + subDir);
         MakeDir(_proxyDir);
@@ -143,7 +145,7 @@ export default class BuildView extends BuildBase {
         ];
         if (!fs.existsSync(proxyPath)) {
             let content = this.proxyTemplate;
-            content = content.replace(/#baseProxyPath#/g, path.relative(_proxyDir,BaseProxyPath).replace(/\\/g, "/").replace(/\.ts/g, ""))
+            content = content.replace(/#baseProxyPath#/g, path.relative(_proxyDir, BaseProxyPath).replace(/\\/g, "/").replace(/\.ts/g, ""))
                 .replace(/#viewCtrlPath#/g, path.relative(_proxyDir, ctrlPath).replace(/\\/g, "/"))
                 .replace(/#proxyName#/g, proxyCls)
                 .replace(/#viewCtrl#/g, ctrlCls);
@@ -151,7 +153,29 @@ export default class BuildView extends BuildBase {
         }
     }
 
-    BuildViewID() {
+    private RemoveUnused() {
+        GetAllFile(
+            ViewDir,
+            true,
+            filename => filename.endsWith("View.ts") || filename.endsWith("Ctrl.ts") || filename.endsWith("Proxy.ts")
+        ).forEach(filepath => {
+            const relative = path.relative(ViewDir, filepath);
+            const pkgname = relative.split("\\")[ 0 ];
+            const filename = path.basename(relative, ".ts");
+            let uiname = "";
+            if (filename.endsWith("View")) uiname = filename.substring(0, filename.length - 4);
+            else if (filename.endsWith("Ctrl")) uiname = filename.substring(0, filename.length - 4);
+            else if (filename.endsWith("Proxy")) uiname = filename.substring(0, filename.length - 5);
+            else return;
+            const uipath = path.resolve(UiDir, pkgname, uiname + ".ts");
+            if (!fs.existsSync(uipath)) {
+                Logger.error("删除=>" + filepath);
+                fs.unlinkSync(filepath);
+            }
+        });
+    }
+
+    private BuildViewID() {
         let [ btns, renders, coms, views ] = [
             "\t/**Btns */\n",
             "\t/**Renders */\n",
@@ -187,7 +211,7 @@ export default class BuildView extends BuildBase {
         fs.writeFileSync(ViewIDPath, content);
     }
 
-    BuildViewRegister() {
+    private BuildViewRegister() {
         const viewRegisterDir = path.dirname(ViewRegisterPath);
         const mapFunc = (fileName: string) => fileName.replace(".ts", "");
         const filterFunc = (start: string, end: string) => (fileName: string) => (!start || fileName.startsWith(start)) && (!end || fileName.endsWith(end));
