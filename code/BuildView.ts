@@ -13,9 +13,9 @@ export default class BuildView extends BuildBase {
 
     protected buildFilter = [
         { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ] },
-        { sign: "Btn", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Btns" },
         { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Coms" },
-        { sign: "Render", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ], subDir: "Renders" },
+        { sign: "Btn", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Btns" },
+        { sign: "Render", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "Renders" },
     ];
 
     doBuild() {
