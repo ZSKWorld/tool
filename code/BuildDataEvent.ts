@@ -17,7 +17,8 @@ export class BuildDataEvent extends BuildBase {
         const infos: IIterfaceInfo[] = [];
         files.forEach(v => {
             const info = this.getFileInfo(UserDataInterfaceDir + "/" + v);
-            infos.push(...info);
+            if (info.length)
+                infos.push(...info);
         });
         let context = MODIFY_TIP + "export const enum UserDataEvent {\r";
         infos.forEach(v => {
@@ -38,19 +39,24 @@ export class BuildDataEvent extends BuildBase {
     }
 
     private decodeFile(node: ts.Node, infos: IIterfaceInfo[]) {
+        let hasInterface = false;
         ts.forEachChild(node, child => {
-            if (ts.isInterfaceDeclaration(child)) {
-                infos.push(this.decodeInterface(child));
+            if (!hasInterface && ts.isInterfaceDeclaration(child)) {
+                hasInterface = true;
+                const info = this.decodeInterface(child);
+                info && infos.push(info);
             }
         });
     }
 
     private decodeInterface(node: ts.InterfaceDeclaration) {
-        const info: IIterfaceInfo = { name: node.name.text, fields: [], methods: [] };
+        let info: IIterfaceInfo;
         ts.forEachChild(node, child => {
             if (ts.isPropertySignature(child)) {
+                info = info || { name: node.name.text, fields: [], methods: [] };
                 info.fields.push(child.name[ "text" ]);
             } else if (ts.isMethodSignature(child)) {
+                info = info || { name: node.name.text, fields: [], methods: [] };
                 info.methods.push(child.name[ "text" ]);
             }
         });

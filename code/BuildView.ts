@@ -175,7 +175,7 @@ export default class BuildView extends BuildBase {
         });
     }
 
-    private BuildViewID() {
+    private GetViewIDContent() {
         let [ btns, renders, coms, views ] = [
             "\t/**Btns */\n",
             "\t/**Renders */\n",
@@ -184,10 +184,10 @@ export default class BuildView extends BuildBase {
         ];
         const viewNames = GetAllFile(
             ViewDir, false,
-            filename => filename.startsWith("Btn")
+            filename => (filename.startsWith("Btn")
                 || filename.startsWith("Render")
                 || filename.startsWith("Com")
-                || filename.startsWith("UI"),
+                || filename.startsWith("UI")) && filename.endsWith("View.ts"),
             filename => filename.replace(".ts", ""),
         );
         let viewCount = 0;
@@ -207,7 +207,12 @@ export default class BuildView extends BuildBase {
         });
         let combine = btns + "\n" + renders + "\n" + coms + "\n" + views;
         if (viewCount == 0) combine = "\tNone = \"\",\n" + combine;
-        const content = this.viewIDTemplate.replace("#content#", combine);
+        return combine;
+    }
+
+    private BuildViewID() {
+        let content = this.GetViewIDContent();
+        content = this.viewIDTemplate.replace("#content#", content);
         fs.writeFileSync(ViewIDPath, content);
     }
 
@@ -253,7 +258,6 @@ export default class BuildView extends BuildBase {
         addExtAndRegistCode(uiNames, "UIs");
 
         let Import = [
-            `import { ViewID } from "./ViewID";\n`,
             `import { uiMgr } from "./UIManager";\n`,
         ];
         const addImport = (arr: string[], hasDefault: boolean) => {
@@ -278,6 +282,7 @@ export default class BuildView extends BuildBase {
             .replace("#binderCode#", BinderCode + "\t")
             .replace("#extensionCode#", ExtensionCode + "\t")
             .replace("#registerCode#", RegisterCode + "\t");
+        content = content.replace("#ViewIDContent#", this.GetViewIDContent());
         fs.writeFileSync(ViewRegisterPath, content);
     }
 }

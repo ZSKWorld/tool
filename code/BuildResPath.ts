@@ -4,7 +4,42 @@ import { BuildBase } from "./BuildBase";
 import { MODIFY_TIP, ResDir, ResPathPath } from "./Const";
 import { UpperFirst } from "./Utils";
 
-export default class BuildResPath extends BuildBase{
+interface Config {
+    filter: (nam: string) => boolean;
+    name: string;
+    pathName: string;
+    include: string;
+    haveName: boolean;
+    haveExt: boolean;
+}
+
+export default class BuildResPath extends BuildBase {
+    private _config: Config[] = [
+        {
+            filter: (name: string) => name.startsWith("res/ui/"),
+            name: "PkgName",
+            pathName: "PkgPath",
+            include: ".zip",
+            haveName: true,
+            haveExt: false,
+        },
+        {
+            filter: (name: string) => name.startsWith("res/font/"),
+            name: "FontName",
+            pathName: "FontPath",
+            include: ".ttf",
+            haveName: true,
+            haveExt: true,
+        },
+        {
+            filter: (name: string) => name.startsWith("res/skeleton/"),
+            name: "SkeletonName",
+            pathName: "SkeletonPath",
+            include: ".sk",
+            haveName: false,
+            haveExt: true,
+        },
+    ];
     doBuild() {
         let content = this.buildResEnum(ResDir, "res/");
         content = `${ MODIFY_TIP }export namespace ResPath {\n${ content }}`;
@@ -13,12 +48,9 @@ export default class BuildResPath extends BuildBase{
 
     private buildResEnum(dirPath: string, dirName: string, baseContent?: string) {
         let content = baseContent || "";
-        const isUI = dirName.startsWith("res/ui/");
-        const isFont = dirName.startsWith("res/font/");
-        let allFiles = readdirSync(dirPath);
         let dirs: string[] = [];
         let files: string[] = [];
-        allFiles.forEach(fileName => {
+        readdirSync(dirPath).forEach(fileName => {
             const filePath = path.resolve(dirPath, fileName);
             const info = statSync(filePath);
             if (info.isDirectory()) {
@@ -27,45 +59,35 @@ export default class BuildResPath extends BuildBase{
                 files.push(fileName);
             }
         });
-        // files.forEach(fileName => {
-        //     let tempName = fileName.split(".")[ 0 ];
-        //     let temp: string = "";
-        //     if (isUI && fileName.endsWith(".zip") == false) return;
-        //     if (isUI) fileName = tempName;
-        //     if (isUI || isFont) temp = `\t${ tempName } = "${ tempName }",\n`;
-        //     temp += `\t${ UpperFirst(dirName.replace("res/", ""), [ "/" ]) + tempName } = "${ dirName + fileName }",\n`;
-        //     content += temp;
-        // });
-        if (isUI) {
-            content += this.buildEnum("PkgName", false, dirName, files, ".zip");
-            content += "\n" + this.buildEnum("PkgPath", true, dirName, files, ".zip");
-        } else if (isFont) {
-            content += this.buildEnum("FontName", false, dirName, files);
-            content += "\n" + this.buildEnum("FontPath", true, dirName, files);
+        const config = this._config.find(v => v.filter(dirName));
+        if (config) {
+            if (config.haveName)
+                content += this.buildEnum(config.name, false, dirName, files, config.include, config.haveExt);
+            content += this.buildEnum(config.pathName, true, dirName, files, config.include, config.haveExt);
         } else {
-            if (!baseContent) content += this.buildEnum("UnclassifiedPath", true, dirName, files);
+            if (!baseContent) content += this.buildEnum("UnclassifiedPath", true, dirName, files, null);
             else {
                 const dirs = dirName.split("/");
-                content += this.buildEnum(UpperFirst(dirs[ dirs.length - 2 ] + "Path"), true, dirName, files);
+                content += this.buildEnum(UpperFirst(dirs[ dirs.length - 2 ] + "Path"), true, dirName, files, null);
             }
         }
         dirs.forEach(fileName => {
             const filePath = path.resolve(dirPath, fileName);
             let subDir = dirName + fileName + "/";
-            content = this.buildResEnum(filePath, subDir, content + `\n\t// ${ subDir }\n`);
+            content = this.buildResEnum(filePath, subDir, content + `\t// ${ subDir }\n`);
         });
         return content;
     }
 
-    private buildEnum(name: string, path: boolean, dir: string, files: string[], include?: string) {
+    private buildEnum(name: string, isPath: boolean, dir: string, files: string[], include: string, haveExt: boolean = true) {
         let content = "";
         files.forEach(v => {
             if (include && v.endsWith(include) == false) return;
             const fileName = v.split(".")[ 0 ];
-            if (path) content += `\n\t\t${ UpperFirst(fileName) } = "${ dir + (include ? fileName : v) }",`;
+            if (isPath) content += `\n\t\t${ UpperFirst(fileName) } = "${ dir + (haveExt ? v : fileName) }",`;
             else content += `\n\t\t${ UpperFirst(fileName) } = "${ fileName }",`;
         });
-        if (content) return `\texport const enum ${ name } {${ content }\n\t}\n`;
-        else return `\texport const enum ${ name } {}\n`;
+        if (content) return `\texport const enum ${ name } {${ content }\n\t}\n\n`;
+        else return `\texport const enum ${ name } {}\n\n`;
     }
 }
