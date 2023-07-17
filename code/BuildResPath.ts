@@ -54,6 +54,7 @@ export default class BuildResPath extends BuildBase {
             const filePath = path.resolve(dirPath, fileName);
             const info = statSync(filePath);
             if (info.isDirectory()) {
+                if (fileName.startsWith("$")) return;
                 dirs.push(fileName);
             } else {
                 files.push(fileName);
