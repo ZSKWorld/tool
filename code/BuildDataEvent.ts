@@ -14,16 +14,15 @@ export class BuildDataEvent extends BuildBase {
     doBuild(): void {
         if (fs.existsSync(UserDataInterfaceDir) == false) return console.error("文件夹不存在=>" + UserDataInterfaceDir);
         const files = fs.readdirSync(UserDataInterfaceDir);
-        const infos: IIterfaceInfo[] = [];
+        let context = MODIFY_TIP + "export const enum UserDataEvent {\r";
         files.forEach(v => {
             const info = this.getFileInfo(UserDataInterfaceDir + "/" + v);
-            if (info.length)
-                infos.push(...info);
-        });
-        let context = MODIFY_TIP + "export const enum UserDataEvent {\r";
-        infos.forEach(v => {
-            context += `\t//${ v.name }\r`;
-            v.fields.forEach(f => context += `\t${ v.name.substring(1) }_${ UpperFirst(f) }_Changed = "${ v.name.substring(1).toLocaleLowerCase() }_${ f.toLocaleLowerCase() }_changed",\r`);
+            let isFirst = true;
+            info.forEach(v => {
+                context += `\t//${ v.name + (isFirst ? new Array(100 - v.name.length).fill("-").join("") : "") }\r`;
+                v.fields.forEach(f => context += `\t${ v.name.substring(1) }_${ UpperFirst(f) }_Changed = "${ v.name.substring(1).toLocaleLowerCase() }_${ f.toLocaleLowerCase() }_changed",\r`);
+                isFirst = false;
+            });
         });
         context += "}";
         fs.writeFileSync(UserDataEventPath, context);
@@ -42,7 +41,7 @@ export class BuildDataEvent extends BuildBase {
         let hasInterface = false;
         ts.forEachChild(node, child => {
             if (!hasInterface && ts.isInterfaceDeclaration(child)) {
-                hasInterface = true;
+                // hasInterface = true;
                 const info = this.decodeInterface(child);
                 info && infos.push(info);
             }

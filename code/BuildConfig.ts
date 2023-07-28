@@ -62,6 +62,7 @@ export default class BuildConfig extends BuildBase {
     cfgTemplate = GetTemplateContent("ConfigTemp");
     cfgExtTemplate = GetTemplateContent("CfgExtension");
     cfgMgrTemplate = GetTemplateContent("CfgMgr");
+    icfgMgrTemplate = GetTemplateContent("ICfgMgr");
 
     /** 表数据转换器 */
     translator: { [ key in CfgExportType ]: (...args) => any } = {
@@ -290,7 +291,9 @@ export default class BuildConfig extends BuildBase {
             vars += `\treadonly ${ v }: ${ configName };\n`;
         });
         const mgrTxt = this.cfgMgrTemplate.replace("#vars#", vars);
+        const imgrTxt = this.icfgMgrTemplate.replace("#vars#", vars);
         fs.writeFileSync(path.resolve(CfgDir, "CfgManager.ts"), mgrTxt);
+        fs.writeFileSync(path.resolve(CfgDir, "ICfgManager.ts"), imgrTxt);
     }
 }
 
