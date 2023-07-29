@@ -38,7 +38,7 @@ export class CfgManager {
 	}
 
 	private cfgExtension(cfg: ICfgExtension<any>): void {
-		cfg[ "$data" ] = Object.values(cfg);
+		cfg[ "$data" ] = Object.keys(cfg).map(v => cfg[ v ]);
 		cfg.forEach = function (callbackfn: (value: any, index: number, array: any[]) => void) {
 			this.$data.forEach(callbackfn);
 		};
