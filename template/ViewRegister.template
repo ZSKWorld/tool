@@ -6,21 +6,21 @@ windowImmit("ViewID", ViewID);
 
 class ViewRegister {
 
-    init() {
+    init(): void {
         this.pkgBind();
         this.viewBind();
         this.registerView();
     }
 
     /**包bind */
-    private pkgBind() {
+    private pkgBind(): void {
 #binderCode#}
 
     /**页面替换bind */
-    private viewBind() {#extensionCode#}
+    private viewBind(): void {#extensionCode#}
 
     /**页面注册 */
-    private registerView() {
+    private registerView(): void {
 		const register = uiMgr.registView.bind(uiMgr);#registerCode#}
 }
 export const viewRegister = new ViewRegister();
