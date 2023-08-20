@@ -258,6 +258,7 @@ export default class BuildView extends BuildBase {
         addExtAndRegistCode(uiNames, "UIs");
 
         let Import = [
+            `import { ViewID } from "./ViewID";\n`,
             `import { uiMgr } from "./UIManager";\n`,
         ];
         const addImport = (arr: string[], hasDefault: boolean) => {
