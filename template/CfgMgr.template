@@ -18,7 +18,7 @@ export class CfgManager {
 		}
 	}
 
-	private decodeData(data: any, keyMap: any): void {
+	private decodeData(data: any, keyMap: any) {
 		if (data == null) return;
 		if (typeof data != "object") return;
 		const isArray = Array.isArray(data);
@@ -37,7 +37,7 @@ export class CfgManager {
 		});
 	}
 
-	private cfgExtension(cfg: ICfgExtension<any>): void {
+	private cfgExtension(cfg: ICfgExtension<any>) {
 		cfg[ "$data" ] = Object.keys(cfg).map(v => cfg[ v ]);
 		cfg.forEach = function (callbackfn: (value: any, index: number, array: any[]) => void) {
 			this.$data.forEach(callbackfn);

@@ -3,21 +3,21 @@
 
 class ViewRegister {
 
-    init(): void {
+    init() {
         this.pkgBind();
         this.viewBind();
         this.registerView();
     }
 
     /**包bind */
-    private pkgBind(): void {
+    private pkgBind() {
 #binderCode#}
 
     /**页面替换bind */
-    private viewBind(): void {#extensionCode#}
+    private viewBind() {#extensionCode#}
 
     /**页面注册 */
-    private registerView(): void {
+    private registerView() {
 		const register = uiMgr.registView.bind(uiMgr);#registerCode#}
 }
 export const viewRegister = new ViewRegister();

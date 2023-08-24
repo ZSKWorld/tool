@@ -120,7 +120,7 @@ export default class BuildView extends BuildBase {
                     if (v.toLowerCase().startsWith("btn")) {
                         const btnName = UpperFirst(v, [ "_" ], "");
                         msgContent += `\t\tthis.addMessage(${ viewMsg }.On${ btnName }Click, this.on${ btnName }Click);\n`;
-                        funcContent += `\tprivate on${ btnName }Click(): void {\n\t\n\t}\n\n`;
+                        funcContent += `\tprivate on${ btnName }Click() {\n\t\n\t}\n\n`;
                     }
                 })
                 msgContent = msgContent ? msgContent.trimEnd() : msgContent;

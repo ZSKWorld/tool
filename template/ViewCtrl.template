@@ -7,7 +7,7 @@ export interface #dataName# {
 
 export class #className# extends BaseViewCtrl<#viewClass#, #dataName#>{
 
-    override onAdded(): void {
+    override onAdded() {
 #btnMessage#
     }
 
