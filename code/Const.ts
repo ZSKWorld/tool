@@ -15,8 +15,13 @@ export const xlsxDir = resolve(__workname, "../策划");
 export const CfgDataPath = resolve(__workname, "bin/res/config/Config.json");
 export const CfgDir = resolve(__workname, "src/core/config");
 
+export const NetDir = resolve(__workname, "src/core/net");
+export const NetInterfaceDir = resolve(NetDir, "interface");
+export const ServicesPath = resolve(NetDir, "Services.ts");
+export const ServiceObjPath = resolve(NetDir, "ServiceObj.ts");
+export const NetResponsePath = resolve(NetDir, "enum/NetMessage.ts");
 export const UserDataDir = resolve(__workname, "src/core/userData");
-export const UserDataInterfaceDir = resolve(__workname, "src/core/userData/interface");
+export const UserDataInterfaceDir = resolve(UserDataDir, "interface");
 export const UserDataEventPath = resolve(UserDataDir, "UserDataEvent.ts");
 
 export const MODIFY_TIP = "/** This script is generated automatically, Please do not any modify! */\r";

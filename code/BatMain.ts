@@ -2,7 +2,9 @@ import * as readline from "readline";
 import { BuildBase } from "./BuildBase";
 import BuildConfig from "./BuildConfig";
 import { BuildDataEvent } from "./BuildDataEvent";
+import BuildNet from "./BuildNet";
 import BuildResPath from "./BuildResPath";
+import BuildServerConfig from "./BuildServerConfig";
 import BuildView from "./BuildView";
 import { Logger } from "./Console";
 
@@ -16,8 +18,10 @@ export default class BatMain {
         const act: Act[] = [
             { desc: "创建 View & ViewCtrl & ViewProxy", cls: BuildView },
             { desc: "导出表配置", cls: BuildConfig },
+            { desc: "导出服务器表配置", cls: BuildServerConfig },
             { desc: "更新资源路径", cls: BuildResPath },
             { desc: "用户数据事件", cls: BuildDataEvent },
+            { desc: "更新网络相关", cls:BuildNet },
         ];
         let tip = "选择要进行的操作：\n0. 全部执行\n";
         act.forEach((v, index) => tip += `${ index + 1 }. ${ v.desc }\n`);
