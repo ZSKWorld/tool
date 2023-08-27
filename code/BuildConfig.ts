@@ -79,26 +79,31 @@ export default class BuildConfig extends BuildBase {
             return +str || 0;
         },
         NumberArray: (str: string) => {
-            if (str == "" || str == null) return [];
+            if (str == null || str == "") return null;
+            str = String(str);
             return String(str).split(",").map(v => this.translator.Number(v));
         },
         NumberMatrix: (str: string) => {
-            if (str == "" || str == null) return [];
+            if (str == null || str == "") return null;
+            str = String(str);
             return String(str).split(";").map(v => this.translator.NumberArray(v));
         },
         String: (str: string) => {
             return str == null ? "" : String(str);
         },
         StringArray: (str: string) => {
-            str = str == null ? "" : String(str);
+            if (str == null || str == "") return null;
+            str = String(str);
             return str.split(",").map(v => this.translator.String(v));
         },
         StringMatrix: (str: string) => {
-            str = str == null ? "" : String(str);
+            if (str == null || str == "") return null;
+            str = String(str);
             return str.split(";").map(v => this.translator.StringArray(v));
         },
         Object: (str: string, type: string) => {
-            str = str == null ? "" : String(str);
+            if (str == null || str == "") return null;
+            str = String(str);
             let tType = type.replace(/\"/g, "");
             tType = tType.substring(1, tType.length - 1);
             const obj = {};
@@ -110,13 +115,15 @@ export default class BuildConfig extends BuildBase {
             return obj;
         },
         ObjectArray: (str: string, type: string) => {
-            str = str == null ? "" : String(str);
+            if (str == null || str == "") return null;
+            str = String(str);
             const values = str.split(";");
             const realType = type.replace("array", "");
             return values.map(v => this.translator.Object(v, realType));
         },
         ObjectMatrix: (str: string, type: string) => {
-            str = str == null ? "" : String(str);
+            if (str == null || str == "") return null;
+            str = String(str);
             const values = str.split("^");
             const realType = type.replace("matrix", "");
             return values.map(v => this.translator.ObjectArray(v, realType));

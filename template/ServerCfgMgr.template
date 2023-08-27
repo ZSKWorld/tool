@@ -2,10 +2,10 @@
 import * as fs from "fs";
 import * as path from "path";
 
-export class CfgManager {
+class CfgManager {
 #vars#
-    constructor() {
-		let cfgData = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../../res/table/Config.json")).toString());
+    load() {
+		let cfgData = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../../res/config/Config.json")).toString());
 		if (cfgData) {
 			const keyMap = cfgData.keyMap;
 			delete cfgData.keyMap;
@@ -50,3 +50,4 @@ export class CfgManager {
 		};
 	}
 }
+export const cfgMgr = new CfgManager();
