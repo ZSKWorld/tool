@@ -15,13 +15,28 @@ interface Act {
 
 export default class BatMain {
     constructor() {
+        this.run2();
+
+
+        //动态require js
+        // const util = require("../js/Utils").GetTemplateContent("View");
+
+        //文件名或者目录名
+        //path.basename
+        //文件或目录所在目录
+        //path.dirname
+        //文件后缀，目录为空
+        //path.extname
+    }
+
+    private run1() {
         const act: Act[] = [
             { desc: "创建 View & ViewCtrl & ViewProxy", cls: BuildView },
             { desc: "导出表配置", cls: BuildConfig },
             { desc: "导出服务器表配置", cls: BuildServerConfig },
             { desc: "更新资源路径", cls: BuildResPath },
             { desc: "用户数据事件", cls: BuildDataEvent },
-            { desc: "更新网络相关", cls:BuildNet },
+            { desc: "更新网络相关", cls: BuildNet },
         ];
         let tip = "选择要进行的操作：\n0. 全部执行\n";
         act.forEach((v, index) => tip += `${ index + 1 }. ${ v.desc }\n`);
@@ -52,17 +67,30 @@ export default class BatMain {
             });
         }
         question();
+    }
 
+    private run2() {
+        const index = +process.argv[ 2 ];
+        if (isNaN(index)) return;
 
-        //动态require js
-        // const util = require("../js/Utils").GetTemplateContent("View");
+        const act: Act[] = [
+            { desc: "创建 View & ViewCtrl & ViewProxy", cls: BuildView },
+            { desc: "导出表配置", cls: BuildConfig },
+            { desc: "更新资源路径", cls: BuildResPath },
+            { desc: "用户数据事件", cls: BuildDataEvent },
+            { desc: "更新网络相关", cls: BuildNet },
+            { desc: "导出服务器表配置", cls: BuildServerConfig },
+        ];
+        if (index == -1) act.forEach(v => this.runLog(v));
+        else this.runLog(act[ index ]);
+        process.exit();
+    }
 
-        //文件名或者目录名
-        //path.basename
-        //文件或目录所在目录
-        //path.dirname
-        //文件后缀，目录为空
-        //path.extname
+    private runLog(act: Act) {
+        if (!act) return;
+        Logger.warn("正在执行 => " + act.desc);
+        (new act.cls()).doBuild();
+        Logger.green(act.desc + " => 执行完毕！")
     }
 }
 new BatMain();

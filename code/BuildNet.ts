@@ -35,18 +35,32 @@ export default class BuildNet extends BuildBase {
         matches.unshift("syncInfo(data: IUserData): void");
         matches.forEach(match => {
             const name = match.substring(0, match.trim().indexOf("("));
-            const type = match.substring(match.indexOf("(") + 1, match.indexOf(")")).replace("Input", "Output").split(":")[ 1 ];
+            const type = match.substring(match.indexOf("(") + 1, match.indexOf(")")).split(":")[ 1 ].trim();
             const temp = UpperFirst(name);
+            const hasInput = type.includes("Input");
             let param1 = "";
             if (type) {
                 param1 += "\t/**\n";
-                param1 += `\t * @param output? {@link ${ type.trim() }}\n`;
-                if (type.includes("Output"))
-                    param1 += `\t * @param input? {@link ${ type.replace("Output", "Input") }}\n`;
+                param1 += `\t * @param output {@link ${ type.replace("Input", "Output") }}\n`;
+                if (hasInput)
+                    param1 += `\t * @param input {@link ${ type }}\n`;
                 param1 += "\t */\n";
             }
             data += param1;
             data += `\t${ temp } = "NetMsg_${ temp }",\n\n`;
+
+            if (hasInput) {
+                param1 = "";
+                if (type) {
+                    param1 += "\t/**\n";
+                    param1 += `\t * @param output {@link ${ type.replace("Input", "Output") }}\n`;
+                    if (hasInput)
+                        param1 += `\t * @param input {@link ${ type }}\n`;
+                    param1 += "\t */\n";
+                }
+                data += param1;
+                data += `\t${ temp + "Error" } = "NetMsg_${ temp }_Error",\n\n`;
+            }
         });
         data = data.trim() + "\n}";
         fs.writeFileSync(NetResponsePath, data);
