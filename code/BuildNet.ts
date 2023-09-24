@@ -10,7 +10,6 @@ export default class BuildNet extends BuildBase {
     doBuild() {
         this.getAllController();
         this.buildNetMsg();
-        this.buildServiceObj();
         this.buildServices();
     }
 
@@ -81,11 +80,17 @@ export default class BuildNet extends BuildBase {
 
     private buildServices() {
         let content = "";
+        let serviceKeys = "";
         Object.keys(this._allCtrls).forEach(v => {
             const name = v.substring(1) + "Service";
             content += `export const ${ name.replace("Ctrl", "") } = ServiceInst<${ v }>();\n`;
+            this._allCtrls[ v ].forEach(func => {
+                serviceKeys += `"${func.substring(0, func.indexOf("("))}", `;
+            });
         });
-        const data = this._servicesTemp.replace(/#content#/g, content);
+        const data = this._servicesTemp
+            .replace(/#content#/g, content)
+            .replace(/#serviceKeys#/g, serviceKeys);
         fs.writeFileSync(ServicesPath, data.trim());
     }
 }
