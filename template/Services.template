@@ -5,7 +5,7 @@ import { websocket } from "./WebSocket";
 class BaseService<T> {
     protected _proxy: T;
     protected constructor() {
-        const serviceKeys = [ #serviceKeys#];
+        const serviceKeys = [#serviceKeys#];
         serviceKeys.forEach(key => {
             Object.defineProperty(this, key, {
                 configurable: false,
@@ -20,7 +20,7 @@ class BaseService<T> {
 }
 
 function ServiceInst<T>() {
-    return class ServiceInst extends BaseService<T>{
+    return class ServiceInst extends BaseService<T> {
         protected static _inst: ServiceInst;
         static get Inst() { return (this._inst || (this._inst = new this())) as unknown as T; }
     }

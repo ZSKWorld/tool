@@ -70,7 +70,7 @@ export default class BuildView extends BuildBase {
                         let msgName = `On${ UpperFirst(varName, [ "_" ], "") }Click`;
                         let msgValue = `"${ filename }_${ msgName }"`;
                         messages += `\t${ msgName } = ${ msgValue },\n`;
-                        sendContent += `\n\t\t${ varName }.onClick(this, this.sendMessage, [ ${ msgEnumName }.${ msgName } ]);`;
+                        sendContent += `\n\t\t${ varName }.onClick(this, this.sendMessage, [${ msgEnumName }.${ msgName }]);`;
                     } else return;
                     useComps.push(varName);
                 });
@@ -236,20 +236,18 @@ export default class BuildView extends BuildBase {
         const ctrlNames = GetAllFile(ViewDir, true, filterFunc("", "Ctrl.ts"), mapFunc);
         const proxyNames = GetAllFile(ViewDir, true, filterFunc("", "Proxy.ts"), mapFunc);
 
-        let [ BinderCode, ExtensionCode, RegisterCode ] = [ "", "", "" ];
+        let [ binderCode, registerCode ] = [ "", "" ];
         binderNames.forEach(v => {
             const basename = path.basename(v);
-            BinderCode += `\t\t${ basename }.bindAll();\n`
+            binderCode += `\t\t${ basename }.bindAll();\n`
         });
         const addExtAndRegistCode = (arr: string[], desc: string) => {
-            ExtensionCode += `\n\t\t//${ desc }\n`;
-            RegisterCode += `\n\t\t//${ desc }\n`;
+            registerCode += `\n\t\t//${ desc }\n`;
             arr.forEach(v => {
                 const basename = path.basename(v);
-                ExtensionCode += `\t\tfgui.UIObjectFactory.setExtension(${ basename }.URL, ${ basename }View);\n`;
                 let proxyName = basename + "Proxy";
                 proxyName = proxyNames.find(v1 => v1.endsWith(proxyName)) ? ", " + proxyName : "";
-                RegisterCode += `\t\tregister(ViewID.${ basename }View, ${ basename }View, ${ basename + "Ctrl" }${ proxyName });\n`;
+                registerCode += `\t\tregister(ViewID.${ basename }View, ${ basename }View, ${ basename + "Ctrl" }${ proxyName });\n`;
             });
         }
         addExtAndRegistCode(btnNames, "Btns");
@@ -257,21 +255,21 @@ export default class BuildView extends BuildBase {
         addExtAndRegistCode(comNames, "Coms");
         addExtAndRegistCode(uiNames, "UIs");
 
-        let Import = [
+        let imports = [
             `import { ViewID } from "./ViewID";\n`,
             `import { uiMgr } from "./UIManager";\n`,
         ];
         const addImport = (arr: string[], hasDefault: boolean) => {
             arr.forEach(v => {
                 const basename = path.basename(v);
-                Import.push(`import ${ hasDefault ? "{ " : "" }${ basename } ${ hasDefault ? "} " : "" }from "${ path.relative(viewRegisterDir, v).replace(/\\/g, "/") }";\n`);
+                imports.push(`import ${ hasDefault ? "{ " : "" }${ basename } ${ hasDefault ? "} " : "" }from "${ path.relative(viewRegisterDir, v).replace(/\\/g, "/") }";\n`);
             });
         }
         addImport(binderNames, false);
-        addImport(uiNames, false);
-        addImport(btnNames, false);
-        addImport(comNames, false);
-        addImport(renderNames, false);
+        // addImport(uiNames, false);
+        // addImport(btnNames, false);
+        // addImport(comNames, false);
+        // addImport(renderNames, false);
 
         addImport(uiViewNames, true);
         addImport(btnViewNames, true);
@@ -279,10 +277,9 @@ export default class BuildView extends BuildBase {
         addImport(renderViewNames, true);
 
         let content = this.viewRegisterTemplate
-            .replace("#import#", Import.sort().join(""))
-            .replace("#binderCode#", BinderCode + "\t")
-            .replace("#extensionCode#", ExtensionCode + "\t")
-            .replace("#registerCode#", RegisterCode + "\t");
+            .replace("#import#", imports.sort().join(""))
+            .replace("#binderCode#", binderCode + "\t")
+            .replace("#registerCode#", registerCode + "\t");
         content = content.replace("#ViewIDContent#", this.GetViewIDContent());
         fs.writeFileSync(ViewRegisterPath, content);
     }

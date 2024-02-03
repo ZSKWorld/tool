@@ -90,7 +90,7 @@ export default class BuildNet extends BuildBase {
         });
         const data = this._servicesTemp
             .replace(/#content#/g, content)
-            .replace(/#serviceKeys#/g, serviceKeys);
+            .replace(/#serviceKeys#/g, serviceKeys.trim());
         fs.writeFileSync(ServicesPath, data.trim());
     }
 }

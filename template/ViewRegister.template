@@ -5,16 +5,12 @@ class ViewRegister {
 
     init() {
         this.pkgBind();
-        this.viewBind();
         this.registerView();
     }
 
     /**包bind */
     private pkgBind() {
 #binderCode#}
-
-    /**页面替换bind */
-    private viewBind() {#extensionCode#}
 
     /**页面注册 */
     private registerView() {
