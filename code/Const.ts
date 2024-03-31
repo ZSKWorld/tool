@@ -16,12 +16,19 @@ export const CfgDataPath = resolve(__workname, "bin/res/config/Config.json");
 export const CfgDir = resolve(__workname, "src/core/config");
 
 export const NetDir = resolve(__workname, "src/core/net");
-export const NetInterfaceDir = resolve(NetDir, "interface");
+export const CMDInterfaceDir = resolve(NetDir, "interface/cmd");
+export const NotifyInterfaceDir = resolve(NetDir, "interface/notify");
 export const ServicesPath = resolve(NetDir, "Services.ts");
 export const ServiceObjPath = resolve(NetDir, "ServiceObj.ts");
-export const NetResponsePath = resolve(NetDir, "enum/NetMessage.ts");
+export const NetCMDPath = resolve(NetDir, "enum/NetCMD.ts");
+export const NetNotifyPath = resolve(NetDir, "enum/NetNotify.ts");
 export const UserDataDir = resolve(__workname, "src/core/userData");
 export const UserDataInterfaceDir = resolve(UserDataDir, "interface");
 export const UserDataEventPath = resolve(UserDataDir, "UserDataEvent.ts");
+
+//---------------------------------------------Server
+export const Server_NotifyInterfaceDir = resolve(__workname, "src/core/controller/interface/notify");
+export const Server_NetNotifyPath = resolve(__workname, "src/core/enum/NetNotify.ts");
+
 
 export const MODIFY_TIP = "/** This script is generated automatically, Please do not any modify! */\r";

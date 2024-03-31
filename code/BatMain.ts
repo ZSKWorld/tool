@@ -7,6 +7,7 @@ import BuildResPath from "./BuildResPath";
 import BuildServerConfig from "./BuildServerConfig";
 import BuildView from "./BuildView";
 import { Logger } from "./Console";
+import BuildServerNet from "./BuildServerNet";
 
 interface Act {
     desc: string,
@@ -80,6 +81,7 @@ export default class BatMain {
             { desc: "用户数据事件", cls: BuildDataEvent },
             { desc: "更新网络相关", cls: BuildNet },
             { desc: "导出服务器表配置", cls: BuildServerConfig },
+            { desc: "更新服务器网络相关", cls: BuildServerNet },
         ];
         if (index == -1) act.forEach(v => this.runLog(v));
         else this.runLog(act[ index ]);

@@ -10,7 +10,7 @@ class BaseService<T> {
             Object.defineProperty(this, key, {
                 configurable: false,
                 enumerable: false,
-                value: function (data: UserInput) {
+                value: function (data: IUserInput) {
                     data.cmd = key;
                     websocket.sendMsg(data);
                 }
