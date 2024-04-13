@@ -3,16 +3,16 @@ import { ResPath } from "../common/ResPath";
 
 export class CfgManager {
 #vars#
-    constructor() {
+	constructor() {
 		let cfgData = Laya.loader.getRes(ResPath.ConfigPath.Config);
 		if (cfgData) {
 			const keyMap = cfgData.keyMap;
 			delete cfgData.keyMap;
 			for (const cfgKey in cfgData) {
-				const data = cfgData[ cfgKey ];
-				Object.keys(data).forEach(dataKey => this.decodeData(data[ dataKey ], keyMap));
+				const data = cfgData[cfgKey];
+				Object.keys(data).forEach(dataKey => this.decodeData(data[dataKey], keyMap));
 				this.cfgExtension(data);
-				this[ cfgKey ] = data;
+				this[cfgKey] = data;
 			}
 			Laya.loader.clearRes(ResPath.ConfigPath.Config);
 		}
@@ -23,42 +23,34 @@ export class CfgManager {
 		if (typeof data != "object") return;
 		const isArray = Array.isArray(data);
 		Object.keys(data).forEach((key) => {
-			const temp = data[ key ];
+			const temp = data[key];
 			const type = temp?.constructor?.name;
 			if (type == "Object")
 				this.decodeData(temp, keyMap);
 			else if (type == "Array")
 				temp.forEach((v: any) => this.decodeData(v, keyMap));
-			if (isArray) data[ key ] = temp;
+			if (isArray) data[key] = temp;
 			else {
-				data[ keyMap[ key ] ] = temp;
-				delete data[ key ];
+				data[keyMap[key]] = temp;
+				delete data[key];
 			}
 		});
 	}
 
-	private cfgExtension(cfg: ICfgExtension<any>) {
+	private cfgExtension(cfg: any) {
 		Object.defineProperty(cfg, "$data", {
-			value: Object.keys(cfg).map(v => cfg[ v ]),
+			value: Object.keys(cfg).map(v => cfg[v]),
 			enumerable: false,
 		});
-		Object.defineProperty(cfg, "forEach", {
-			value: function (callbackfn: (value: any, index: number, array: any[]) => void) {
-				this.$data.forEach(callbackfn);
-			},
-			enumerable: false,
-		});
-		Object.defineProperty(cfg, "filter", {
-			value: function (predicate: (value: any, index: number, array: any[]) => unknown) {
-				return this.$data.filter(predicate);
-			},
-			enumerable: false,
-		});
-		Object.defineProperty(cfg, "find", {
-			value: function (predicate: (value: any, index: number, obj: any[]) => unknown) {
-				return this.$data.find(predicate);
-			},
-			enumerable: false,
-		});
+		const defineFun = (funName: string) => {
+			Object.defineProperty(cfg, funName, {
+				value: function (callbackfn: Function) { return this.$data[funName](callbackfn); },
+				enumerable: false,
+				configurable: false,
+			});
+		};
+		[
+			"forEach", "filter", "find", "every", "findIndex", "includes", "indexOf", "lastIndexOf", "map", "reduce", "slice", "some",
+		].forEach(v => defineFun(v));
 	}
 }

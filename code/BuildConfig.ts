@@ -9,13 +9,11 @@ class ObjectDeclare {
     keys: string[];
     types: string[];
     descs?: string[];
-    extend?: string[];
-    constructor(name: string, keys: string[], types: string[], descs?: string[], extend?: string[]) {
+    constructor(name: string, keys: string[], types: string[], descs?: string[]) {
         this.name = name;
         this.keys = keys;
         this.types = types;
         this.descs = descs;
-        this.extend = extend || [ "ICfgReadOnly" ];
     }
 }
 
@@ -63,7 +61,6 @@ export default class BuildConfig extends BuildBase {
         nameMap: {},
     };
     cfgTemplate = GetTemplateContent("ConfigTemp");
-    cfgExtTemplate = GetTemplateContent("CfgExtension");
     cfgMgrTemplate = GetTemplateContent("CfgMgr");
     icfgMgrTemplate = GetTemplateContent("ICfgMgr");
 
@@ -138,7 +135,6 @@ export default class BuildConfig extends BuildBase {
         fs.mkdirSync(CfgDir);
         this.CreateConfig();
         this.CreateCfgMgr();
-        fs.writeFileSync(path.resolve(CfgDir, "CfgExtension.d.ts"), this.cfgExtTemplate);
     }
 
     private GetKeyNum(key: string) {
@@ -238,14 +234,14 @@ export default class BuildConfig extends BuildBase {
         const cfgTypes = this.GetCfgType(keys, types, cfgName);
         const baseType = cfgTypes[ 0 ];
         baseType.descs = descs;
-        cfgTypes.splice(0, 0, new ObjectDeclare(`Cfg${ cfgName }`, ids, new Array(ids.length).fill(baseType.name), dataDescs, [ `ICfgExtension<${ baseType.name }>`, `ICfgReadOnly<${ baseType.name }>` ]));
+        cfgTypes.splice(0, 0, new ObjectDeclare(`Cfg${ cfgName }`, ids, new Array(ids.length).fill(baseType.name), dataDescs));
         let typeContent = MODIFY_TIP;
         cfgTypes.forEach(type => {
-            typeContent += `declare interface ${ type.name } extends ${ type.extend.join(", ") } {\r`;
+            typeContent += `declare interface ${ type.name } {\r`;
             type.keys.forEach((key, index) => {
                 if (key == BuildConfig.Sign_Skip || type.types[ index ] == BuildConfig.Sign_Skip) return;
                 if (type.descs && type.descs.length) typeContent += `\t/** ${ type.descs[ index ] ?? "" } */\r`;
-                typeContent += `\treadonly ${ key }: ${ type.types[ index ] };\r`;
+                typeContent += `\t${ key }: ${ type.types[ index ] };\r`;
             });
             typeContent += `}\r\r`;
         });
@@ -308,7 +304,7 @@ export default class BuildConfig extends BuildBase {
         let vars = "";
         Object.keys(this.config).forEach((v, index) => {
             const configName = `Cfg${ v }`;
-            vars += `\t/** ${ nameMap[ v ] ?? "" } */\n\treadonly ${ v }: ${ configName };\n`;
+            vars += `\t/** ${ nameMap[ v ] ?? "" } */\n\treadonly ${ v }: CfgData<${configName}>;\n`;
         });
         const mgrTxt = this.cfgMgrTemplate.replace("#vars#", vars);
         const imgrTxt = this.icfgMgrTemplate.replace("#vars#", vars);
