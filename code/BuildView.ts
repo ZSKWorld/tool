@@ -12,10 +12,10 @@ export default class BuildView extends BuildBase {
     private viewRegisterTemplate = GetTemplateContent("ViewRegister");
 
     protected buildFilter = [
-        { sign: "UI", funcs: [ this.BuildView, this.BuildCtrl, this.BuildProxy ] },
-        { sign: "Com", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "coms" },
-        { sign: "Btn", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "btns" },
-        { sign: "Render", funcs: [ this.BuildView, this.BuildCtrl ], subDir: "renders" },
+        { sign: "UI", funcs: [this.BuildView, this.BuildCtrl, this.BuildProxy] },
+        { sign: "Com", funcs: [this.BuildView, this.BuildCtrl], subDir: "coms" },
+        { sign: "Btn", funcs: [this.BuildView, this.BuildCtrl], subDir: "btns" },
+        { sign: "Render", funcs: [this.BuildView, this.BuildCtrl], subDir: "renders" },
     ];
 
     doBuild() {
@@ -44,7 +44,7 @@ export default class BuildView extends BuildBase {
     private BuildView(dirPath: string, filename: string, subDir: string = "") {
         const viewDir = path.resolve(ViewDir, path.basename(dirPath) + "/view/" + subDir);
         MakeDir(viewDir);
-        const [ viewCls, viewPath, pkgName ] = [
+        const [viewCls, viewPath, pkgName] = [
             filename + "View",
             path.resolve(viewDir, filename + "View.ts"),
             path.basename(dirPath),
@@ -56,7 +56,7 @@ export default class BuildView extends BuildBase {
                 .replace(/#packageName#/g, pkgName)
                 .replace(/#fileName#/g, filename);
 
-            let [ sendContent, compContent, compExtension, imports, messages ] = [ "", "", "\n", "", "" ];
+            let [sendContent, compContent, compExtension, imports, messages] = ["", "", "\n", "", ""];
 
             const matches = fs.readFileSync(path.resolve(dirPath, filename + ".ts")).toString().match(/public.*:.*;/g);
             const uiComps = matches ? matches.filter(v => !v.includes("static")) : [];
@@ -65,9 +65,9 @@ export default class BuildView extends BuildBase {
                 let msgEnumName = `${ filename }Msg`;
                 let useComps = [];
                 uiComps.forEach((v, index) => {
-                    const [ varName, varType ] = v.substring(7, v.length - 1).split(":");
+                    const [varName, varType] = v.substring(7, v.length - 1).split(":");
                     if (varName.toLowerCase().startsWith("btn")) {
-                        let msgName = `On${ UpperFirst(varName, [ "_" ], "") }Click`;
+                        let msgName = `On${ UpperFirst(varName, ["_"], "") }Click`;
                         let msgValue = `"${ filename }_${ msgName }"`;
                         messages += `\t${ msgName } = ${ msgValue },\n`;
                         sendContent += `\n\t\t${ varName }.onClick(this, this.sendMessage, [${ msgEnumName }.${ msgName }]);`;
@@ -93,7 +93,7 @@ export default class BuildView extends BuildBase {
         const _viewDir = path.resolve(ViewDir, path.basename(dirPath) + "/view/" + subDir);
         const _ctrlDir = path.resolve(ViewDir, path.basename(dirPath) + "/controller/" + subDir);
         MakeDir(_ctrlDir);
-        const [ viewCls, viewMsg, ctrlCls, dataName, viewPath, ctrlPath, pkgName ] = [
+        const [viewCls, viewMsg, ctrlCls, dataName, viewPath, ctrlPath, pkgName] = [
             filename + "View",
             filename + "Msg",
             filename + "Ctrl",
@@ -111,14 +111,14 @@ export default class BuildView extends BuildBase {
                 .replace(/#viewClass#/g, viewCls)
                 .replace(/#viewMsg#/g, viewMsg)
                 .replace(/#dataName#/g, dataName);
-            let [ msgContent, funcContent ] = [ "", "" ];
+            let [msgContent, funcContent] = ["", ""];
             const matches = fs.readFileSync(path.resolve(dirPath, filename + ".ts")).toString().match(/public.*:.*;/g);
             const uiComps = matches ? matches.filter(v => !v.includes("static")) : [];
             if (uiComps.length > 0) {
                 uiComps.forEach(v => {
-                    v = v.split(" ")[ 1 ].split(":")[ 0 ];
+                    v = v.split(" ")[1].split(":")[0];
                     if (v.toLowerCase().startsWith("btn")) {
-                        const btnName = UpperFirst(v, [ "_" ], "");
+                        const btnName = UpperFirst(v, ["_"], "");
                         msgContent += `\t\tthis.addMessage(${ viewMsg }.On${ btnName }Click, this.on${ btnName }Click);\n`;
                         funcContent += `\tprivate on${ btnName }Click() {\n\t\n\t}\n\n`;
                     }
@@ -137,7 +137,7 @@ export default class BuildView extends BuildBase {
         const _ctrlDir = path.resolve(ViewDir, path.basename(dirPath) + "/controller/" + subDir);
         const _proxyDir = path.resolve(ViewDir, path.basename(dirPath) + "/proxy/" + subDir);
         MakeDir(_proxyDir);
-        const [ ctrlCls, proxyCls, ctrlPath, proxyPath ] = [
+        const [ctrlCls, proxyCls, ctrlPath, proxyPath] = [
             filename + "Ctrl",
             filename + "Proxy",
             path.resolve(_ctrlDir, filename + "Ctrl"),
@@ -160,7 +160,7 @@ export default class BuildView extends BuildBase {
             filename => filename.endsWith("View.ts") || filename.endsWith("Ctrl.ts") || filename.endsWith("Proxy.ts")
         ).forEach(filepath => {
             const relative = path.relative(ViewDir, filepath);
-            const pkgname = relative.split("\\")[ 0 ];
+            const pkgname = relative.split("\\")[0];
             const filename = path.basename(relative, ".ts");
             let uiname = "";
             if (filename.endsWith("View")) uiname = filename.substring(0, filename.length - 4);
@@ -176,7 +176,7 @@ export default class BuildView extends BuildBase {
     }
 
     private GetViewIDContent() {
-        let [ btns, renders, coms, views ] = [
+        let [btns, renders, coms, views] = [
             "\t/**Btns */\n",
             "\t/**Renders */\n",
             "\t/**Coms */\n",
@@ -236,7 +236,7 @@ export default class BuildView extends BuildBase {
         const ctrlNames = GetAllFile(ViewDir, true, filterFunc("", "Ctrl.ts"), mapFunc);
         const proxyNames = GetAllFile(ViewDir, true, filterFunc("", "Proxy.ts"), mapFunc);
 
-        let [ binderCode, registerCode ] = [ "", "" ];
+        let [binderCode, registerCode] = ["", ""];
         binderNames.forEach(v => {
             const basename = path.basename(v);
             binderCode += `\t\t${ basename }.bindAll();\n`

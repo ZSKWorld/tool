@@ -9,7 +9,7 @@ export function RemoveDir(dir: string) {
     if (fs.existsSync(dir) == false) return;
     let files = fs.readdirSync(dir)
     for (var i = 0; i < files.length; i++) {
-        let newPath = path.join(dir, files[ i ]);
+        let newPath = path.join(dir, files[i]);
         let stat = fs.statSync(newPath)
         if (stat.isDirectory()) {
             //如果是文件夹就递归下去
@@ -55,9 +55,9 @@ export function UpperFirst(str: string, splits?: string[], joinStr = "_") {
     if (!str) return str;
     if (str.length == 1) return str.toUpperCase();
     else {
-        let temp = str[ 0 ].toUpperCase() + str.substring(1);
+        let temp = str[0].toUpperCase() + str.substring(1);
         if (splits && splits.length) {
-            let resultArr = [ temp ];
+            let resultArr = [temp];
             splits.forEach(v => {
                 let count = resultArr.length;
                 while (count--) {

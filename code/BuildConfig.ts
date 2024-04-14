@@ -9,11 +9,13 @@ class ObjectDeclare {
     keys: string[];
     types: string[];
     descs?: string[];
-    constructor(name: string, keys: string[], types: string[], descs?: string[]) {
+    subData: boolean;
+    constructor(name: string, keys: string[], types: string[], descs?: string[], subData = true) {
         this.name = name;
         this.keys = keys;
         this.types = types;
         this.descs = descs;
+        this.subData = subData;
     }
 }
 
@@ -65,7 +67,7 @@ export default class BuildConfig extends BuildBase {
     icfgMgrTemplate = GetTemplateContent("ICfgMgr");
 
     /** 表数据转换器 */
-    translator: { [ key in CfgExportType ]: (...args) => any } = {
+    translator: { [key in CfgExportType]: (...args) => any } = {
         Bool: (str: string) => {
             return String(str).toLowerCase() == "true";
         },
@@ -106,8 +108,8 @@ export default class BuildConfig extends BuildBase {
             const obj = {};
             const values = str.split(",");
             tType.split(",").forEach((v, index) => {
-                const [ key, vType ] = v.split(":");
-                obj[ this.GetKeyNum(key) ] = this.translator[ this.GetExportType(vType) ](values[ index ], vType);
+                const [key, vType] = v.split(":");
+                obj[this.GetKeyNum(key)] = this.translator[this.GetExportType(vType)](values[index], vType);
             });
             return obj;
         },
@@ -138,11 +140,11 @@ export default class BuildConfig extends BuildBase {
     }
 
     private GetKeyNum(key: string) {
-        let keyNum = this.keyNumMap[ key ];
+        let keyNum = this.keyNumMap[key];
         if (!keyNum) {
             keyNum = this.keyIndex++;
-            this.keyNumMap[ key ] = keyNum;
-            this.config.keyMap[ keyNum ] = key;
+            this.keyNumMap[key] = keyNum;
+            this.config.keyMap[keyNum] = key;
         }
         return keyNum;
     }
@@ -177,10 +179,10 @@ export default class BuildConfig extends BuildBase {
                 sheets.shift();
                 sheets.forEach(sht => {
                     const names = sht.name.split("|");
-                    sht.name = names[ 1 ];
+                    sht.name = names[1];
                     const cfg = {};
                     const datas = sht.data;
-                    const [ types, keys, descs ] = datas.splice(0, 3);
+                    const [types, keys, descs] = datas.splice(0, 3);
                     const typeCnt = types.length;
                     const dataCnt = datas.length;
                     let hasData = false;
@@ -188,36 +190,36 @@ export default class BuildConfig extends BuildBase {
                     const dataDescs: string[] = [];
                     //第一列是修饰符，从第二列开始遍历
                     for (let i = 1; i < typeCnt; i++) {
-                        const type = types[ i ];
+                        const type = types[i];
                         //跳过忽略的列
                         if (type == BuildConfig.Sign_Skip) continue;
-                        const key = keys[ i ];
-                        const desc = descs[ i ];
+                        const key = keys[i];
+                        const desc = descs[i];
                         const isDataDesc = desc && desc.startsWith("//");
-                        desc && (descs[ i ] = desc.replace("//", ""));
+                        desc && (descs[i] = desc.replace("//", ""));
                         for (let j = 0; j < dataCnt; j++) {
-                            const row = datas[ j ];
-                            const rowId = row[ 1 ];
+                            const row = datas[j];
+                            const rowId = row[1];
                             //跳过没有id的行
                             if (rowId == null) continue;
                             //跳过忽略的行
-                            if (row[ 0 ] == BuildConfig.Sign_Ignore) continue;
+                            if (row[0] == BuildConfig.Sign_Ignore) continue;
                             i == 1 && ids.push(rowId);
-                            isDataDesc && dataDescs.push(row[ i ]);
-                            const item = cfg[ rowId ] = cfg[ rowId ] || {};
+                            isDataDesc && dataDescs.push(row[i]);
+                            const item = cfg[rowId] = cfg[rowId] || {};
                             try {
-                                const value = translator[ this.GetExportType(type) ](row[ i ], type);
-                                item[ this.GetKeyNum(key) ] = value;
+                                const value = translator[this.GetExportType(type)](row[i], type);
+                                item[this.GetKeyNum(key)] = value;
                             } catch (error) {
-                                console.log(sht.name + "===" + i + "===" + row[ i ] + "===" + type);
+                                console.log(sht.name + "===" + i + "===" + row[i] + "===" + type);
                                 throw error;
                             }
                             hasData = true;
                         }
                     }
                     if (hasData) {
-                        this.config[ sht.name ] = cfg;
-                        this.config.nameMap[ sht.name ] = names[ 0 ];
+                        this.config[sht.name] = cfg;
+                        this.config.nameMap[sht.name] = names[0];
                     }
                     keys.splice(0, 1);
                     types.splice(0, 1);
@@ -232,18 +234,19 @@ export default class BuildConfig extends BuildBase {
     /** 创建表类型接口 */
     private CreateCfgType(ids: string[], keys: string[], types: string[], descs: string[], cfgName: string, dataDescs?: string[]) {
         const cfgTypes = this.GetCfgType(keys, types, cfgName);
-        const baseType = cfgTypes[ 0 ];
+        const baseType = cfgTypes[0];
         baseType.descs = descs;
-        cfgTypes.splice(0, 0, new ObjectDeclare(`Cfg${ cfgName }`, ids, new Array(ids.length).fill(baseType.name), dataDescs));
+        cfgTypes.splice(0, 0, new ObjectDeclare(`Cfg${ cfgName }`, ids, new Array(ids.length).fill(baseType.name), dataDescs, false));
         let typeContent = MODIFY_TIP;
         cfgTypes.forEach(type => {
-            typeContent += `declare interface ${ type.name } {\r`;
+            typeContent += `declare interface ${ type.name } {\n`;
+            typeContent += `\treadonly [key: string]: ${ type.subData ? "any" : type.types[0] };\n`;
             type.keys.forEach((key, index) => {
-                if (key == BuildConfig.Sign_Skip || type.types[ index ] == BuildConfig.Sign_Skip) return;
-                if (type.descs && type.descs.length) typeContent += `\t/** ${ type.descs[ index ] ?? "" } */\r`;
-                typeContent += `\t${ key }: ${ type.types[ index ] };\r`;
+                if (key == BuildConfig.Sign_Skip || type.types[index] == BuildConfig.Sign_Skip) return;
+                if (type.descs && type.descs.length) typeContent += `\t/** ${ type.descs[index] ?? "" } */\n`;
+                typeContent += `\treadonly ${ key }: ${ type.types[index] };\n`;
             });
-            typeContent += `}\r\r`;
+            typeContent += `}\n\n`;
         });
         fs.writeFileSync(CfgDir + "/Cfg" + cfgName + ".d.ts", typeContent);
     }
@@ -251,10 +254,10 @@ export default class BuildConfig extends BuildBase {
     /** 获取表所有字段类型集合 */
     private GetCfgType(keys: string[], types: string[], cfgName: string) {
         const dec = new ObjectDeclare(`Cfg${ cfgName }Data`, [], []);
-        const declares = [ dec ];
+        const declares = [dec];
         keys.forEach((key, index) => {
             dec.keys.push(key);
-            dec.types.push(this.GetTSType(types[ index ], declares, cfgName));
+            dec.types.push(this.GetTSType(types[index], declares, cfgName));
         });
         return declares;
     }
@@ -278,7 +281,7 @@ export default class BuildConfig extends BuildBase {
                     typeDesc = typeDesc.substring(1, typeDesc.length - 1);
                     const typeDescs = typeDesc.split(",");
                     typeDescs.forEach(typeDesc => {
-                        const [ key, type ] = typeDesc.split(":");
+                        const [key, type] = typeDesc.split(":");
                         dec.keys.push(key);
                         dec.types.push(this.GetTSType(type, declares, cfgName));
                     });
@@ -304,7 +307,7 @@ export default class BuildConfig extends BuildBase {
         let vars = "";
         Object.keys(this.config).forEach((v, index) => {
             const configName = `Cfg${ v }`;
-            vars += `\t/** ${ nameMap[ v ] ?? "" } */\n\treadonly ${ v }: CfgData<${configName}>;\n`;
+            vars += `\t/** ${ nameMap[v] ?? "" } */\n\treadonly ${ v }: ${ configName } & CfgExtension<CfgData<${ configName }>>;\n`;
         });
         const mgrTxt = this.cfgMgrTemplate.replace("#vars#", vars);
         const imgrTxt = this.icfgMgrTemplate.replace("#vars#", vars);

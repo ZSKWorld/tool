@@ -53,10 +53,10 @@ export class BuildDataEvent extends BuildBase {
         ts.forEachChild(node, child => {
             if (ts.isPropertySignature(child)) {
                 info = info || { name: node.name.text, fields: [], methods: [] };
-                info.fields.push(child.name[ "text" ]);
+                info.fields.push(child.name["text"]);
             } else if (ts.isMethodSignature(child)) {
                 info = info || { name: node.name.text, fields: [], methods: [] };
-                info.methods.push(child.name[ "text" ]);
+                info.methods.push(child.name["text"]);
             }
         });
         return info;

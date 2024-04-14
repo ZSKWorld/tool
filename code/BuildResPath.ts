@@ -69,7 +69,7 @@ export default class BuildResPath extends BuildBase {
             if (!baseContent) content += this.buildEnum("UnclassifiedPath", true, dirName, files, null);
             else {
                 const dirs = dirName.split("/");
-                content += this.buildEnum(UpperFirst(dirs[ dirs.length - 2 ] + "Path"), true, dirName, files, null);
+                content += this.buildEnum(UpperFirst(dirs[dirs.length - 2] + "Path"), true, dirName, files, null);
             }
         }
         dirs.forEach(fileName => {
@@ -84,7 +84,7 @@ export default class BuildResPath extends BuildBase {
         let content = "";
         files.forEach(v => {
             if (include && v.endsWith(include) == false) return;
-            const fileName = v.split(".")[ 0 ];
+            const fileName = v.split(".")[0];
             if (isPath) content += `\n\t\t${ UpperFirst(fileName) } = "${ dir + (haveExt ? v : fileName) }",`;
             else content += `\n\t\t${ UpperFirst(fileName) } = "${ fileName }",`;
         });

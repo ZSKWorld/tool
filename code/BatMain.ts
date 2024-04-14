@@ -5,9 +5,9 @@ import { BuildDataEvent } from "./BuildDataEvent";
 import BuildNet from "./BuildNet";
 import BuildResPath from "./BuildResPath";
 import BuildServerConfig from "./BuildServerConfig";
+import BuildServerNet from "./BuildServerNet";
 import BuildView from "./BuildView";
 import { Logger } from "./Console";
-import BuildServerNet from "./BuildServerNet";
 
 interface Act {
     desc: string,
@@ -49,11 +49,11 @@ export default class BatMain {
         const question = () => {
             rl.question(tip, function (prompt) {
                 let index = +prompt;
-                if (Number.isNaN(index) == false && (index && act[ index - 1 ] || !index)) {
+                if (Number.isNaN(index) == false && (index && act[index - 1] || !index)) {
                     index -= 1;
                     const acts: Act[] = [];
                     if (index == -1) acts.push(...act);
-                    else acts.push(act[ index ]);
+                    else acts.push(act[index]);
                     acts.length && acts.forEach(v => {
                         Logger.warn("正在执行 => " + v.desc);
                         (new v.cls()).doBuild();
@@ -71,7 +71,7 @@ export default class BatMain {
     }
 
     private run2() {
-        const index = +process.argv[ 2 ];
+        const index = +process.argv[2];
         if (isNaN(index)) return;
 
         const act: Act[] = [
@@ -84,7 +84,7 @@ export default class BatMain {
             { desc: "更新服务器网络相关", cls: BuildServerNet },
         ];
         if (index == -1) act.forEach(v => this.runLog(v));
-        else this.runLog(act[ index ]);
+        else this.runLog(act[index]);
         process.exit();
     }
 

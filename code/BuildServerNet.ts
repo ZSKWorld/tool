@@ -1,8 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { CMDInterfaceDir, NetCMDPath, NetNotifyPath, NotifyInterfaceDir, Server_NetNotifyPath, Server_NotifyInterfaceDir, ServicesPath } from "./Const";
-import { GetTemplateContent, UpperFirst } from "./Utils";
+import { Server_NetNotifyPath, Server_NotifyInterfaceDir } from "./Const";
 export default class BuildServerNet extends BuildBase {
     private _allNotifyCtrls: { [key: string]: string[] } = {};
     doBuild() {
