@@ -37,12 +37,13 @@ export default class BuildExcelDeclare extends BuildBase {
                 const tableName = file.replace(".xlsx", "");
                 const tableUpperName = this.upperFirst(tableName, ["_"], "");
                 tableNameMap[tableUpperName] = tableName;
+                tableSheetInfo[tableName] ||= {};
                 const sheets: { name: string, data: string[][] }[] = xlsx.parse(path.resolve(xlsxDir, file)).filter(v => !this.hasChinese(v.name)) as any;
                 const exportSheet = sheets.shift();
+                exportSheet.data.shift();
                 //导出类型映射
                 const exportTypeMap: { [tableName: string]: { exportKey: string, exportType: ExportType, exportComment: string } } = {};
                 exportSheet.data.forEach((v, i) => {
-                    if (i <= 0) return;
                     exportTypeMap[v[0]] = { exportKey: v[1], exportType: v[2] as ExportType, exportComment: v[3] ? v[3].replace(new RegExp("\n", "g"), "。") : "" };
                 });
                 sheets.forEach(sheet => {
