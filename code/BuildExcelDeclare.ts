@@ -17,7 +17,7 @@ const enum ExportType {
     NoKey = "nokey",
 }
 
-export default class BuildExcelDeclare extends BuildBase{
+export default class BuildExcelDeclare extends BuildBase {
     private typeMap = {
         "float": "number",
         "int32": "number",
@@ -31,13 +31,12 @@ export default class BuildExcelDeclare extends BuildBase{
 
     private createTableEnum() {
         let declareContent = "";
-        const tableNameMap = {}, tableSheetNameInfo = {}, sheetNameRepeatInfo = {};
+        const tableNameMap = {}, tableSheetInfo = {}, sheetRepeatInfo = {};
         fs.readdirSync(xlsxDir).forEach(file => {
             if (file.endsWith(".xlsx")) {
-                const fileName = file.replace(".xlsx", "");
-                const tableName = this.upperFirst(fileName, ["_"], "");
-                tableNameMap[tableName] = fileName;
-                const sheetNameMap = tableSheetNameInfo[fileName] = tableSheetNameInfo[fileName] || {};
+                const tableName = file.replace(".xlsx", "");
+                const tableUpperName = this.upperFirst(tableName, ["_"], "");
+                tableNameMap[tableUpperName] = tableName;
                 const sheets: { name: string, data: string[][] }[] = xlsx.parse(path.resolve(xlsxDir, file)).filter(v => !this.hasChinese(v.name)) as any;
                 const exportSheet = sheets.shift();
                 //导出类型映射
@@ -47,9 +46,24 @@ export default class BuildExcelDeclare extends BuildBase{
                     exportTypeMap[v[0]] = { exportKey: v[1], exportType: v[2] as ExportType, exportComment: v[3] ? v[3].replace(new RegExp("\n", "g"), "。") : "" };
                 });
                 sheets.forEach(sheet => {
-                    const sheetName = this.upperFirst(sheet.name, ["_"], "");
-                    sheetNameMap[sheetName] = { name: sheet.name, type: `Table_${ tableName }_${ sheetName }`, repeat: sheetNameRepeatInfo[sheetName] };
-                    sheetNameRepeatInfo[sheetName] = true;
+                    const sheetName = sheet.name;
+                    const sheetUpperName = this.upperFirst(sheetName, ["_"], "");
+                    const dataType = `Data_${ tableUpperName }_${ sheetUpperName }`;
+                    const tableType = `Table_${ tableUpperName }_${ sheetUpperName }`;
+                    const sheetDataType = `Sheet_${ tableUpperName }_${ sheetUpperName }`;
+                    //表导出类型 group， unique
+                    const tableExportKey = exportTypeMap[sheetName].exportKey;
+                    const tableExportType = exportTypeMap[sheetName].exportType;
+                    const tableComment = exportTypeMap[sheetName].exportComment;
+
+                    const repeatTableName = sheetRepeatInfo[sheetUpperName] = sheetRepeatInfo[sheetUpperName] || tableName;
+                    tableSheetInfo[repeatTableName][sheetUpperName] ||= { name: sheetName, dataType: [], tableType: [], exportType: [], tableName: [], sheetName: [] };
+                    const nameInfo = tableSheetInfo[repeatTableName][sheetUpperName];
+                    nameInfo.dataType.push(dataType);
+                    nameInfo.tableType.push(tableType);
+                    nameInfo.exportType.push(tableExportType);
+                    nameInfo.tableName.push(tableName);
+                    nameInfo.sheetName.push(sheetName);
 
                     const fieldIndex = sheet.data.findIndex(sdv => sdv[0] == "##");
                     const commentIndex = sheet.data.findIndex(sdv => sdv[0] == "#comment");
@@ -63,20 +77,22 @@ export default class BuildExcelDeclare extends BuildBase{
                     types.shift();
                     comments && comments.shift();
 
-                    //表导出类型 group， unique
-                    const tableExportType = exportTypeMap[sheet.name].exportType;
-                    const tableComment = exportTypeMap[sheet.name].exportComment;
                     if (tableExportType == ExportType.Unique) {
-                        declareContent += `---unique table\n---@class Table_${ tableName }_${ sheetName }${ tableComment ? " " + tableComment : "" }\n`;
+                        declareContent += `---unique sheet\n---@class ${ sheetDataType }${ tableComment ? " " + tableComment : "" }\n`;
                         declareContent += this.getSheetFieldsContent(fields, types, comments);
-                        declareContent += "\n";
+                        const keyFieldIndex = fields.findIndex(v => v == tableExportKey);
+                        const keyType = this.typeMap[types[keyFieldIndex]] || "string";
+                        declareContent += `\n---unique data\n---@alias ${ dataType } ${ sheetDataType }`;
+                        declareContent += `\n---unique table<${ tableExportKey }, ${ dataType }>\n---@alias ${ tableType } table<${ keyType }, ${ dataType }>\n\n`;
                     } else if (tableExportType == ExportType.Group || tableExportType == ExportType.NoKey) {
-                        const sheetDataTypeName = `Sheet_${ tableName }_${ sheetName }`;
-                        declareContent += `---group sheet\n---@class ${ sheetDataTypeName }${ tableComment ? " " + tableComment : "" }\n`;
+                        declareContent += `---group sheet\n---@class ${ sheetDataType }${ tableComment ? " " + tableComment : "" }\n`;
                         declareContent += this.getSheetFieldsContent(fields, types, comments);
-                        declareContent += `\n---group table\n---@alias Table_${ tableName }_${ sheetName } ${ sheetDataTypeName }[]\n\n`;
+                        const keyFieldIndex = fields.findIndex(v => v == tableExportKey);
+                        const keyType = this.typeMap[types[keyFieldIndex]] || "string";
+                        declareContent += `\n---group data\n---@alias ${ dataType } ${ sheetDataType }[]`;
+                        declareContent += `\n---group table<${ tableExportKey }, ${ dataType }>\n---@alias ${ tableType } table<${ keyType }, ${ dataType }>\n\n`;
                     } else {
-                        console.log("未知的表导出类型", tableExportType, fileName);
+                        console.log("未知的表导出类型", tableExportType, tableName, sheetName);
                     }
                 });
             }
@@ -86,13 +102,16 @@ export default class BuildExcelDeclare extends BuildBase{
             enumContent += `\t${ v } = "${ tableNameMap[v] }",\n`
         });
         enumContent += "}\n\n---表sheet名枚举\n---@enum SheetName\nSheetName = {\n";
-        Object.keys(tableSheetNameInfo).forEach(tv => {
+        Object.keys(tableSheetInfo).forEach(tv => {
             enumContent += `\t---${ tv }表\n\n`;
-            const tvData = tableSheetNameInfo[tv];
+            const tvData = tableSheetInfo[tv];
             Object.keys(tvData).forEach(v => {
-                enumContent += `\t---@see ${ tvData[v].type }\n`;
-                enumContent += tvData[v].repeat ? "\t---" : "\t";
-                enumContent += `${ v } = "${ tvData[v].name }",${ tvData[v].repeat ? "\t重复\n" : "" }\n`
+                const { name, dataType, tableType, exportType, tableName, sheetName } = tvData[v];
+                dataType.forEach((_, i) => {
+                    enumContent += `\t---@see ${ dataType[i] } ${ exportType[i] } data => ${ tableName[i] }.${ sheetName[i] }\n`;
+                    enumContent += `\t---@see ${ tableType[i] } ${ exportType[i] } table => ${ tableName[i] }.${ sheetName[i] }\n`;
+                });
+                enumContent += `\t${ v } = "${ name }",\n`
             });
             enumContent += "\n";
         });
