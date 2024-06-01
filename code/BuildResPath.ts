@@ -1,7 +1,7 @@
 import { readdirSync, statSync, writeFileSync } from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { MODIFY_TIP, ResDir, ResPathPath } from "./Const";
+import { ResDir, ResPathPath, TS_MODIFY_TIP } from "./Const";
 import { UpperFirst } from "./Utils";
 
 interface Config {
@@ -42,7 +42,7 @@ export default class BuildResPath extends BuildBase {
     ];
     doBuild() {
         let content = this.buildResEnum(ResDir, "res/");
-        content = `${ MODIFY_TIP }export namespace ResPath {\n${ content }}`;
+        content = `${ TS_MODIFY_TIP }export namespace ResPath {\n${ content }}`;
         writeFileSync(ResPathPath, content);
     }
 

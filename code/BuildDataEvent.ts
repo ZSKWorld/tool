@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as ts from "typescript";
 import { BuildBase } from "./BuildBase";
-import { MODIFY_TIP, UserDataEventPath, UserDataInterfaceDir } from "./Const";
+import { TS_MODIFY_TIP, UserDataEventPath, UserDataInterfaceDir } from "./Const";
 import { UpperFirst } from "./Utils";
 
 interface IIterfaceInfo {
@@ -14,7 +14,7 @@ export class BuildDataEvent extends BuildBase {
     doBuild(): void {
         if (fs.existsSync(UserDataInterfaceDir) == false) return console.error("文件夹不存在=>" + UserDataInterfaceDir);
         const files = fs.readdirSync(UserDataInterfaceDir);
-        let context = MODIFY_TIP + "export const enum UserDataEvent {\r";
+        let context = TS_MODIFY_TIP + "export const enum UserDataEvent {\r";
         files.forEach(v => {
             const info = this.getFileInfo(UserDataInterfaceDir + "/" + v);
             let isFirst = true;

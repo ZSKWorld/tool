@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as xlsx from "node-xlsx";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { CfgDataPath, CfgDir, MODIFY_TIP, xlsxDir } from "./Const";
+import { CfgDataPath, CfgDir, TS_MODIFY_TIP, xlsxDir } from "./Const";
 import { GetTemplateContent, RemoveDir } from "./Utils";
 class ObjectDeclare {
     name: string;
@@ -237,7 +237,7 @@ export default class BuildConfig extends BuildBase {
         const baseType = cfgTypes[0];
         baseType.descs = descs;
         cfgTypes.splice(0, 0, new ObjectDeclare(`Cfg${ cfgName }`, ids, new Array(ids.length).fill(baseType.name), dataDescs, false));
-        let typeContent = MODIFY_TIP;
+        let typeContent = TS_MODIFY_TIP;
         cfgTypes.forEach(type => {
             typeContent += `declare interface ${ type.name } {\n`;
             typeContent += `\treadonly [key: string]: ${ type.subData ? "any" : type.types[0] };\n`;

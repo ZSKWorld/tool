@@ -31,4 +31,5 @@ export const Server_NotifyInterfaceDir = resolve(__workname, "src/core/controlle
 export const Server_NetNotifyPath = resolve(__workname, "src/core/enum/NetNotify.ts");
 
 
-export const MODIFY_TIP = "/** This script is generated automatically, Please do not any modify! */\r";
+export const TS_MODIFY_TIP = "/** This script is generated automatically, Please do not any modify! */";
+export const LUA_MODIFY_TIP = "---This script is generated automatically, Please do not any modify!";

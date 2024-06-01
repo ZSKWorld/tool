@@ -8,6 +8,7 @@ import BuildServerConfig from "./BuildServerConfig";
 import BuildServerNet from "./BuildServerNet";
 import BuildView from "./BuildView";
 import { Logger } from "./Console";
+import BuildExcelDeclare from "./BuildExcelDeclare";
 
 interface Act {
     desc: string,
@@ -82,6 +83,7 @@ export default class BatMain {
             { desc: "更新网络相关", cls: BuildNet },
             { desc: "导出服务器表配置", cls: BuildServerConfig },
             { desc: "更新服务器网络相关", cls: BuildServerNet },
+            { desc: "更新ExcelDeclare", cls: BuildExcelDeclare },
         ];
         if (index == -1) act.forEach(v => this.runLog(v));
         else this.runLog(act[index]);
