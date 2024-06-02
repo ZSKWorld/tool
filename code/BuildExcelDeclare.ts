@@ -78,23 +78,12 @@ export default class BuildExcelDeclare extends BuildBase {
                     types.shift();
                     comments && comments.shift();
 
-                    if (tableExportType == ExportType.Unique) {
-                        declareContent += `---unique sheet\n---@class ${ sheetDataType }${ tableComment ? " " + tableComment : "" }\n`;
-                        declareContent += this.getSheetFieldsContent(fields, types, comments);
-                        const keyFieldIndex = fields.findIndex(v => v == tableExportKey);
-                        const keyType = this.typeMap[types[keyFieldIndex]] || "string";
-                        declareContent += `\n---unique data\n---@alias ${ dataType } ${ sheetDataType }`;
-                        declareContent += `\n---unique table<${ tableExportKey }, ${ dataType }>\n---@alias ${ tableType } table<${ keyType }, ${ dataType }>\n\n`;
-                    } else if (tableExportType == ExportType.Group || tableExportType == ExportType.NoKey) {
-                        declareContent += `---group sheet\n---@class ${ sheetDataType }${ tableComment ? " " + tableComment : "" }\n`;
-                        declareContent += this.getSheetFieldsContent(fields, types, comments);
-                        const keyFieldIndex = fields.findIndex(v => v == tableExportKey);
-                        const keyType = this.typeMap[types[keyFieldIndex]] || "string";
-                        declareContent += `\n---group data\n---@alias ${ dataType } ${ sheetDataType }[]`;
-                        declareContent += `\n---group table<${ tableExportKey }, ${ dataType }>\n---@alias ${ tableType } table<${ keyType }, ${ dataType }>\n\n`;
-                    } else {
-                        console.log("未知的表导出类型", tableExportType, tableName, sheetName);
-                    }
+                    declareContent += `---${ tableExportType } sheet${ tableComment ? " | " + tableComment : "" }\n---@class ${ sheetDataType }\n`;
+                    declareContent += this.getSheetFieldsContent(fields, types, comments);
+                    const keyFieldIndex = fields.findIndex(v => v == tableExportKey);
+                    const keyType = this.typeMap[types[keyFieldIndex]] || "string";
+                    declareContent += `\n---${ tableExportType } data\n---@alias ${ dataType } ${ sheetDataType }${ this.exportTableDataType(tableExportType) }`;
+                    declareContent += `\n---${ tableExportType } table<${ tableExportKey }, ${ dataType }>\n---@alias ${ tableType } table<${ keyType }, ${ dataType }>\n\n`;
                 });
             }
         });
@@ -104,13 +93,13 @@ export default class BuildExcelDeclare extends BuildBase {
         });
         enumContent += "}\n\n---表sheet名枚举\n---@enum SheetName\nSheetName = {\n";
         Object.keys(tableSheetInfo).forEach(tv => {
-            enumContent += `\t---${ tv }表\n\n`;
+            // enumContent += `\t---${ tv }表\n\n`;
             const tvData = tableSheetInfo[tv];
             Object.keys(tvData).forEach(v => {
                 const { name, dataType, tableType, exportType, tableName, sheetName } = tvData[v];
                 dataType.forEach((_, i) => {
-                    enumContent += `\t---@see ${ dataType[i] } ${ exportType[i] } data => ${ tableName[i] }.${ sheetName[i] }\n`;
-                    enumContent += `\t---@see ${ tableType[i] } ${ exportType[i] } table => ${ tableName[i] }.${ sheetName[i] }\n`;
+                    enumContent += `\t---@see ${ dataType[i] }\n`;
+                    enumContent += `\t---@see ${ tableType[i] } ${ exportType[i] }\n`;
                 });
                 enumContent += `\t${ v } = "${ name }",\n`
             });
@@ -123,6 +112,13 @@ export default class BuildExcelDeclare extends BuildBase {
     private hasChinese(str: string) {
         const reg = /[\u4e00-\u9fa5|\u3002|\uff1f|\uff01|\uff0c|\u3001|\uff1b|\uff1a|\u201c|\u201d|\u2018|\u2019|\uff08|\uff09|\u300a|\u300b|\u3008|\u3009|\u3010|\u3011|\u300e|\u300f|\u300c|\u300d|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|\uffe5]/;
         return reg.test(str);
+    }
+
+    private exportTableDataType(type: ExportType) {
+        switch (type) {
+            case ExportType.Group: return "[]";
+            default: return "";
+        }
     }
 
     private upperFirst(str: string, splits?: string[], joinStr = "_") {
@@ -147,12 +143,12 @@ export default class BuildExcelDeclare extends BuildBase {
     }
 
     private getSheetFieldsContent(fields: string[], types: string[], comments: string[]) {
-        const result: { [fieldName: string]: { type: string, comments: string[] } } = {};
+        const result: { [fieldName: string]: { type: string, isArray: boolean, comments: string[] } } = {};
         fields.forEach((v, i) => {
             const realFieldName = v.replace(/\[\d+\]/g, "");
-            result[realFieldName] ||= { type: "", comments: [] };
-            result[realFieldName].type ||= this.typeMap[types[i]] ? this.typeMap[types[i]] + (v == realFieldName ? "" : "[]") : "";
-            comments && comments[i] && result[realFieldName].comments.push(comments[i]);
+            result[realFieldName] ||= { type: "", isArray: v != realFieldName, comments: [] };
+            result[realFieldName].type ||= this.typeMap[types[i]] ? this.typeMap[types[i]] + (result[realFieldName].isArray ? "[]" : "") : "";
+            comments && result[realFieldName].comments.push(comments[i] || "");
         });
         let content = "";
         Object.keys(result).forEach(v => {
@@ -160,9 +156,14 @@ export default class BuildExcelDeclare extends BuildBase {
                 result[v].type = "any";
                 result[v].comments.push("unknown field type");
             }
-            content += `---@field public ${ v } ${ result[v].type }${ result[v].comments.length ? " " + result[v].comments.join(", ") : "" }\n`;
+            const comments = result[v].isArray ? this.getArrConnectStr(result[v].comments) : result[v].comments[0];
+            content += `---@field public ${ v } ${ result[v].type }${ comments ? " @ " + comments : "" }\n`;
         });
         return content;
+    }
+    private getArrConnectStr(arr: string[]) {
+        if (!arr || !arr.length) return "";
+        return arr.map(v => "[" + v + "]").join(", ");
     }
 }
 
