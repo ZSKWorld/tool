@@ -31,19 +31,20 @@ export default class BuildExcelDeclare extends BuildBase {
 
     private createTableEnum() {
         let declareContent = "";
-        const tableNameMap = {}, tableSheetInfo = {}, sheetRepeatInfo = {};
+        const tableNameMap = {}, tableSheetInfo = {}, sheetRepeatInfo = {}, tableSheetInfo2 = {};
         fs.readdirSync(xlsxDir).forEach(file => {
             if (file.endsWith(".xlsx")) {
                 const tableName = file.replace(".xlsx", "");
                 const tableUpperName = this.upperFirst(tableName, ["_"], "");
                 tableNameMap[tableUpperName] = tableName;
                 tableSheetInfo[tableName] ||= {};
+                tableSheetInfo2[tableName] ||= {};
                 const sheets: { name: string, data: string[][] }[] = xlsx.parse(path.resolve(xlsxDir, file)).filter(v => !this.hasChinese(v.name)) as any;
                 const exportSheet = sheets.shift();
-                exportSheet.data.shift();
+                exportSheet?.data.shift();
                 //导出类型映射
                 const exportTypeMap: { [tableName: string]: { exportKey: string, exportType: ExportType, exportComment: string } } = {};
-                exportSheet.data.forEach((v, i) => {
+                exportSheet?.data.forEach((v, i) => {
                     exportTypeMap[v[0]] = { exportKey: v[1], exportType: v[2] as ExportType, exportComment: v[3] ? v[3].replace(new RegExp("\n", "g"), "。") : "" };
                 });
                 sheets.forEach(sheet => {
@@ -52,19 +53,25 @@ export default class BuildExcelDeclare extends BuildBase {
                     const dataType = `Data_${ tableUpperName }_${ sheetUpperName }`;
                     const tableType = `Table_${ tableUpperName }_${ sheetUpperName }`;
                     const sheetDataType = `Sheet_${ tableUpperName }_${ sheetUpperName }`;
-                    //表导出类型 group， unique
+
                     const tableExportKey = exportTypeMap[sheetName].exportKey;
                     const tableExportType = exportTypeMap[sheetName].exportType;
                     const tableComment = exportTypeMap[sheetName].exportComment;
 
                     const repeatTableName = sheetRepeatInfo[sheetUpperName] = sheetRepeatInfo[sheetUpperName] || tableName;
-                    tableSheetInfo[repeatTableName][sheetUpperName] ||= { name: sheetName, dataType: [], tableType: [], exportType: [], tableName: [], sheetName: [] };
+                    tableSheetInfo[repeatTableName][sheetUpperName] ||= {
+                        name: sheetName, dataType: [], tableType: [], exportType: [], tableName: [], sheetName: []
+                    };
                     const nameInfo = tableSheetInfo[repeatTableName][sheetUpperName];
                     nameInfo.dataType.push(dataType);
                     nameInfo.tableType.push(tableType);
                     nameInfo.exportType.push(tableExportType);
                     nameInfo.tableName.push(tableName);
                     nameInfo.sheetName.push(sheetName);
+
+                    tableSheetInfo2[tableName][sheetUpperName] = {
+                        dataType, tableType, exportType: tableExportType, tableName, sheetName, tableUpperName
+                    };
 
                     const fieldIndex = sheet.data.findIndex(sdv => sdv[0] == "##");
                     const commentIndex = sheet.data.findIndex(sdv => sdv[0] == "#comment");
@@ -73,7 +80,7 @@ export default class BuildExcelDeclare extends BuildBase {
 
                     const fields = sheet.data[fieldIndex];
                     const types = sheet.data[typeIndex];
-                    const comments = commentIndex >= 0 ? sheet.data[commentIndex] : null;
+                    const comments = commentIndex >= 0 ? sheet.data[commentIndex] : [];
                     fields.shift();
                     types.shift();
                     comments && comments.shift();
@@ -105,6 +112,19 @@ export default class BuildExcelDeclare extends BuildBase {
             });
             enumContent += "\n";
         });
+        //
+        enumContent += "}\n\n---表名 & sheet名 枚举\n---@enum ExcelSheet\nExcelSheet = {\n";
+        Object.keys(tableSheetInfo2).forEach(tv => {
+            const tvData = tableSheetInfo2[tv];
+            Object.keys(tvData).forEach(v => {
+                const { dataType, tableType, exportType, tableName, sheetName, tableUpperName } = tvData[v];
+                enumContent += `\t---@see ${ dataType }\n`;
+                enumContent += `\t---@see ${ tableType } ${ exportType }\n`;
+                enumContent += `\t${ tableUpperName + "_" + v } = { "${ tableName }", "${ sheetName }" },\n`
+            });
+            enumContent += "\n";
+        });
+        //
         enumContent = enumContent.trim() + "\n}";
         const content = enumContent + "\n\n" + declareContent;
         fs.writeFileSync(outputPath, content.trim());
