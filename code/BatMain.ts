@@ -2,13 +2,14 @@ import * as readline from "readline";
 import { BuildBase } from "./BuildBase";
 import BuildConfig from "./BuildConfig";
 import { BuildDataEvent } from "./BuildDataEvent";
+import BuildExcelDeclare from "./BuildExcelDeclare";
 import BuildNet from "./BuildNet";
+import BuildProtoDeclare from "./BuildProtoDeclare";
 import BuildResPath from "./BuildResPath";
 import BuildServerConfig from "./BuildServerConfig";
 import BuildServerNet from "./BuildServerNet";
 import BuildView from "./BuildView";
 import { Logger } from "./Console";
-import BuildExcelDeclare from "./BuildExcelDeclare";
 
 interface Act {
     desc: string,
@@ -84,6 +85,7 @@ export default class BatMain {
             { desc: "导出服务器表配置", cls: BuildServerConfig },
             { desc: "更新服务器网络相关", cls: BuildServerNet },
             { desc: "更新ExcelDeclare", cls: BuildExcelDeclare },
+            { desc: "更新ProtoDeclare", cls: BuildProtoDeclare },
         ];
         if (index == -1) act.forEach(v => this.runLog(v));
         else this.runLog(act[index]);

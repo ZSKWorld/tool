@@ -30,6 +30,13 @@ export const UserDataEventPath = resolve(UserDataDir, "UserDataEvent.ts");
 export const Server_NotifyInterfaceDir = resolve(__workname, "src/core/controller/interface/notify");
 export const Server_NetNotifyPath = resolve(__workname, "src/core/enum/NetNotify.ts");
 
+//---------------------------------------------PaiHun
+export const PaiHun_ExcelDir = resolve(__workname, "excel");
+export const PaiHun_ExcelDeclarePath = resolve(__workname, "Lua/LuaScript/Net/ExcelDeclare.lua");
+export const PaiHun_ProtoPath = resolve(__workname, "proto/client.proto");
+export const PaiHun_ProtoReplacePath = resolve(__dirname, "../../data/proto_replace.jsonc");
+export const PaiHun_ProtoTsDeclarePath = resolve(__workname, "Lua/LuaScript/Net/proto.d.ts");
+export const PaiHun_ProtoLuaDeclarePath = resolve(__workname, "Lua/LuaScript/Net/ProtoDeclare.lua");
 
 export const TS_MODIFY_TIP = "/** This script is generated automatically, Please do not any modify! */";
 export const LUA_MODIFY_TIP = "---This script is generated automatically, Please do not any modify!";

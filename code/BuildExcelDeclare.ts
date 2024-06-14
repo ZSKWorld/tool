@@ -2,14 +2,7 @@ import * as fs from "fs";
 import * as xlsx from "node-xlsx";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-
-// const xlsxDir = "../../../paihun-excel/data";
-// const modify_tip = "---This script is generated automatically, Please do not any modify!"
-// const outputPath = "../../../paihun_unity_project/Assets/Lua/LuaScript/GameUtility/ExcelEnum.lua";
-
-const xlsxDir = "C:\\Users\\Administrator\\Desktop\\Assets\\excel";
-const modify_tip = "---This script is generated automatically, Please do not any modify!"
-const outputPath = "C:\\Users\\Administrator\\Desktop\\Assets\\Lua\\LuaScript\\Net\\ExcelDeclare.lua";
+import { LUA_MODIFY_TIP, PaiHun_ExcelDeclarePath, PaiHun_ExcelDir } from "./Const";
 
 const enum ExportType {
     Group = "group",
@@ -32,14 +25,14 @@ export default class BuildExcelDeclare extends BuildBase {
     private createTableEnum() {
         let declareContent = "";
         const tableNameMap = {}, tableSheetInfo = {}, sheetRepeatInfo = {}, tableSheetInfo2 = {};
-        fs.readdirSync(xlsxDir).forEach(file => {
+        fs.readdirSync(PaiHun_ExcelDir).forEach(file => {
             if (file.endsWith(".xlsx")) {
                 const tableName = file.replace(".xlsx", "");
                 const tableUpperName = this.upperFirst(tableName, ["_"], "");
                 tableNameMap[tableUpperName] = tableName;
                 tableSheetInfo[tableName] ||= {};
                 tableSheetInfo2[tableName] ||= {};
-                const sheets: { name: string, data: string[][] }[] = xlsx.parse(path.resolve(xlsxDir, file)).filter(v => !this.hasChinese(v.name)) as any;
+                const sheets: { name: string, data: string[][] }[] = xlsx.parse(path.resolve(PaiHun_ExcelDir, file)).filter(v => !this.hasChinese(v.name)) as any;
                 const exportSheet = sheets.shift();
                 exportSheet?.data.shift();
                 //导出类型映射
@@ -94,7 +87,7 @@ export default class BuildExcelDeclare extends BuildBase {
                 });
             }
         });
-        let enumContent = `${ modify_tip }\n\n---表名枚举\n---@enum ExcelName\nExcelName = {\n`;
+        let enumContent = `${ LUA_MODIFY_TIP }\n\n---表名枚举\n---@enum ExcelName\nExcelName = {\n`;
         Object.keys(tableNameMap).forEach(v => {
             enumContent += `\t${ v } = "${ tableNameMap[v] }",\n`
         });
@@ -127,7 +120,7 @@ export default class BuildExcelDeclare extends BuildBase {
         //
         enumContent = enumContent.trim() + "\n}";
         const content = enumContent + "\n\n" + declareContent;
-        fs.writeFileSync(outputPath, content.trim());
+        fs.writeFileSync(PaiHun_ExcelDeclarePath, content.trim());
     }
     private hasChinese(str: string) {
         const reg = /[\u4e00-\u9fa5|\u3002|\uff1f|\uff01|\uff0c|\u3001|\uff1b|\uff1a|\u201c|\u201d|\u2018|\u2019|\uff08|\uff09|\u300a|\u300b|\u3008|\u3009|\u3010|\u3011|\u300e|\u300f|\u300c|\u300d|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|\uffe5]/;
