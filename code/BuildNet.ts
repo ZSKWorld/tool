@@ -3,7 +3,7 @@ import * as path from "path";
 import { BuildBase } from "./BuildBase";
 import { CMDInterfaceDir, NetCMDPath, NetNotifyPath, NotifyInterfaceDir, ServicesPath, TS_MODIFY_TIP } from "./Const";
 import { GetTemplateContent, UpperFirst } from "./Utils";
-export default class BuildNet extends BuildBase {
+export class BuildNet extends BuildBase {
     private _allCMDCtrls: { [key: string]: string[] } = {};
     private _allNotifyCtrls: { [key: string]: string[] } = {};
     private _servicesTemp = GetTemplateContent("Services");

@@ -13,7 +13,7 @@ interface Config {
     haveExt: boolean;
 }
 
-export default class BuildResPath extends BuildBase {
+export class BuildResPath extends BuildBase {
     private _config: Config[] = [
         {
             filter: (name: string) => name.startsWith("res/ui/"),

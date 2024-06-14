@@ -10,7 +10,7 @@ const enum ExportType {
     NoKey = "nokey",
 }
 
-export default class BuildExcelDeclare extends BuildBase {
+export class BuildExcelDeclare extends BuildBase {
     private typeMap = {
         "float": "number",
         "int32": "number",

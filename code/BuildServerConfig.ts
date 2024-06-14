@@ -1,6 +1,6 @@
-import BuildConfig from "./BuildConfig";
+import { BuildConfig } from "./BuildConfig";
 import { GetTemplateContent } from "./Utils";
 
-export default class BuildServerConfig extends BuildConfig {
+export class BuildServerConfig extends BuildConfig {
     cfgMgrTemplate = GetTemplateContent("ServerCfgMgr");
 }

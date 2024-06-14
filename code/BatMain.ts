@@ -1,14 +1,14 @@
 import * as readline from "readline";
 import { BuildBase } from "./BuildBase";
-import BuildConfig from "./BuildConfig";
+import { BuildConfig } from "./BuildConfig";
 import { BuildDataEvent } from "./BuildDataEvent";
-import BuildExcelDeclare from "./BuildExcelDeclare";
-import BuildNet from "./BuildNet";
-import BuildProtoDeclare from "./BuildProtoDeclare";
-import BuildResPath from "./BuildResPath";
-import BuildServerConfig from "./BuildServerConfig";
-import BuildServerNet from "./BuildServerNet";
-import BuildView from "./BuildView";
+import { BuildExcelDeclare } from "./BuildExcelDeclare";
+import { BuildNet } from "./BuildNet";
+import { BuildProtoDeclare } from "./BuildProtoDeclare";
+import { BuildResPath } from "./BuildResPath";
+import { BuildServerConfig } from "./BuildServerConfig";
+import { BuildServerNet } from "./BuildServerNet";
+import { BuildView } from "./BuildView";
 import { Logger } from "./Console";
 
 interface Act {
@@ -16,7 +16,7 @@ interface Act {
     cls: new () => BuildBase;
 }
 
-export default class BatMain {
+export class BatMain {
     constructor() {
         this.run2();
 

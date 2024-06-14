@@ -50,7 +50,7 @@ const enum CfgExportType {
     Export_Skip = "Skip",
 }
 
-export default class BuildConfig extends BuildBase {
+export class BuildConfig extends BuildBase {
     static readonly Sign_Types = "$";
     static readonly Sign_Keys = "!";
     static readonly Sign_Descs = "#";

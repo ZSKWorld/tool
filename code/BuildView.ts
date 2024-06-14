@@ -4,7 +4,7 @@ import { BuildBase } from "./BuildBase";
 import { Logger } from "./Console";
 import { BaseProxyPath, BaseViewCtrlPath, ResPathPathNoExt, UiDir, ViewDir, ViewIDPath, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir, UpperFirst } from "./Utils";
-export default class BuildView extends BuildBase {
+export class BuildView extends BuildBase {
     private viewTemplate = GetTemplateContent("View");
     private ctrlTemplate = GetTemplateContent("ViewCtrl");
     private proxyTemplate = GetTemplateContent("ViewProxy");

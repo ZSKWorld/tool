@@ -9,7 +9,7 @@ type IType = protobuf.IType & { name: string, comment: string }
 type IField = protobuf.IField & { comment: string }
 type ProtoMap = { [key: string]: { services: IService[], msgs: IType[] } }
 
-export default class BuildProtoDeclare extends BuildBase {
+export class BuildProtoDeclare extends BuildBase {
     private SubTypeMark = "$";
     private luaKeywords = [
         "and", "break", "do", "else", "elseif", "end", "false", "for",

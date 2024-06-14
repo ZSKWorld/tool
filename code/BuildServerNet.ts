@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
 import { Server_NetNotifyPath, Server_NotifyInterfaceDir, TS_MODIFY_TIP } from "./Const";
-export default class BuildServerNet extends BuildBase {
+export class BuildServerNet extends BuildBase {
     private _allNotifyCtrls: { [key: string]: string[] } = {};
     doBuild() {
         this.getAllNotifyController();
