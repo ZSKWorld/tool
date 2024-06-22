@@ -1,30 +1,22 @@
 {
     "enums":[
-        [["DuelDiscardType"], ["Attacker", 1], ["Defender"]],
-        [["DuelCamp"], ["Red", 1], ["Black"]],
-        [["EDecorateSaveType"], [ "LobbyBackground", 1 ], [ "GameBackground" ], [ "Effects" ], [ "CardFaces" ] ],
-        [["ESeasonState"], ["Running", 1], ["Settlement"], ["End"]],
-        [["EPokerGameMode"], [ "Normal", 1 ], [ "BuXiPai" ], [ "Laizi" ] ],
-        [["EEffectType"], ["Chuntian", 1], ["Huojian"], ["Zhadan"], ["Feiji"], ["Liandui"], ["Shunzi"]],
-        [["ECardFaceType"], ["RedJoker", 1], ["BlackJoker"], ["A"], ["K"], ["Q"], ["J"], ["Number"], ["Bg", 100]],
-        [["TexasCamp"], ["Persia", 1], ["Rome"]],
-        [["EClownDeskStatus"], ["None", 0], ["Battle"], ["BattleWin"], ["Shop"], ["ChooseGoods"], ["GameOver"]],
-        [["LeaderBoardType"], ["Season", 0], ["LostMoneyMost"], ["SadLandlord"], ["PiggyBank"], ["Clown"]],
-        [["EClownCardType", "牌面类型"], ["None", 0, "无"], ["SoulCard", null, "手牌"], ["JokerCard", null, "小丑牌"], ["ItemCard", null, "道具"], ["PackCard", null, "卡包"]],
-        [
-            // ["EDuelCardType", "双人对决牌型"], 
-            // ["None"], 
-            // ["HighCard", null, "单张"], 
-            // ["OnePair", null, "一对"], 
-            // ["TwoPair", null, "两对"], 
-            // ["ThreeKing", null, "三条"], 
-            // ["Straight", null, "顺子"], 
-            // ["Flush", null, "同花"], 
-            // ["FullHouse", null, "葫芦"], 
-            // ["FourKing", null, "四条"], 
-            // ["StraightFlush", null, "同花顺"], 
-            // ["RoyalFlush", null, "皇家同花顺"]
-        ]
+        [["DuelDiscardType"], ["Attacker", "", 1], ["Defender"]],
+        [["DuelCamp"], ["Red", "", 1], ["Black"]],
+        [["EDecorateSaveType"], ["LobbyBackground", "", 1], ["GameBackground"], ["Effects"], ["CardFaces"]],
+        [["ESeasonState"], ["Running", "", 1], ["Settlement"], ["End"]],
+        [["EPokerGameMode"], ["Normal", "", 1], ["BuXiPai"], ["Laizi"]],
+        [["EEffectType"], ["Chuntian", "", 1], ["Huojian"], ["Zhadan"], ["Feiji"], ["Liandui"], ["Shunzi"]],
+        [["ECardFaceType"], ["RedJoker", "", 1], ["BlackJoker"], ["A"], ["K"], ["Q"], ["J"], ["Number"], ["Bg", "", 100]],
+        [["TexasCamp"], ["Persia", "", 1], ["Rome"]],
+        [["LeaderBoardType"], ["Season", "", 0], ["LostMoneyMost"], ["SadLandlord"], ["PiggyBank"], ["Clown"]],
+        [["EClownDeskStatus", "小丑牌对局状态"], ["None", "", 0], ["Battle", "战斗中"], ["BattleWin", "战斗胜利"], ["Shop", "商店中"], ["ChooseGoods", "选择物品中"], ["GameOver", "游戏结束"]],
+        [["EClownCardType", "小丑牌牌面类型"], ["None", "无", 0], ["SoulCard", "手牌"], ["JokerCard", "小丑牌"], ["ItemCard", "道具"], ["PackCard", "卡包"]],
+        [["EClownMaterial", "小丑牌材质类型"], ["None", "无", 0], ["Increase", "升值"], ["Double", "加倍"], ["BlackGold", "黑金"], ["Customization", "定制"], ["Metal", "金属"], ["Gold", "黄金"]],
+        [["EClownEdition", "小丑牌卡面类型"], ["None", "无", 0], ["Flash", "闪光"], ["Laser", "镭射"], ["Rainbow", "彩虹"], ["Transparent", "透明"]],
+        [["EClownSeal", "小丑牌印章类型"], ["None", "无", 0], ["Golden", "金色章"], ["Red", "红色章"], ["Purple", "紫色章"]],
+        [["EClownEffectChange", "小丑牌出牌生效的变化类型"], ["BasePoint", "底分变化", 1], ["Ratio", "倍率变化"], ["Other", "其他变化"]],
+        [["EClownOtherChange", "小丑牌出牌生效的其他变化类型"], ["None", "无变化", 0], ["Enhance", "卡牌材质变化"], ["Destroy", "卡牌被摧毁"], ["AddCoin", "增加金币"], ["AddProp", "获得道具"], ["DealCard", "抽牌"], ["DropCard", "弃牌"], ["AddHandCard", "凭空加入手牌"]],
+        [["EClownNumberChange", "小丑牌出牌生效的数值的变化类型"], ["None", "无", 0], ["Addition", "加法变化"], ["Multiplication", "乘法变化"]]
     ],
     //omissible 是否是可选字段
     "client": {},
@@ -152,6 +144,23 @@
         },
         "JokPackResult":{
             "type":{"type":"EClownCardType"}
+        },
+        "JokCardEnhance":{
+            "material": {"type":"EClownMaterial"},
+            "edition": {"type":"EClownEdition"},
+            "seal": {"type":"EClownSeal"}
+        },
+        "JokCardEffect": {
+            "change_type":{"type":"EClownEffectChange"}
+        },
+        "JokCardUnionEffect": {
+            "change_type":{"type":"EClownEffectChange"}
+        },
+        "JokNumberChange": {
+            "type":{"type":"EClownNumberChange"}
+        },
+        "JokOtherChange": {
+            "type":{"type":"EClownOtherChange"}
         }
     }
 }

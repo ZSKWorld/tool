@@ -17,7 +17,7 @@ export class BuildProtoDeclare extends BuildBase {
         "return", "then", "true", "until", "while", "package", "module"
     ];
     private protoMap: ProtoMap = {};
-    private replaces: KeyMap<KeyMap<KeyMap<{ type: string, tsType: string, luaType: string, omissible: boolean }>> & [string[], ...[string, number, string][]][]>;
+    private replaces: KeyMap<KeyMap<KeyMap<{ type: string, tsType: string, luaType: string, omissible: boolean }>> & [string[], ...[string, string, number][]][]>;
 
     doBuild(): void {
         let findIndex = -1;
@@ -147,10 +147,10 @@ export class BuildProtoDeclare extends BuildBase {
             else
                 enumContent += `\t/** ${ nameArr[1] } */\n\tconst enum ${ nameArr[0] } {\n`;
             let enumIndex = 0;
-            (<[string, number, string][]>data).forEach(v1 => {
-                enumIndex = v1[1] || enumIndex;
-                if (v1[2])
-                    enumContent += `\t\t/** ${ v1[2] } */\n\t\t${ v1[0] } = ${ enumIndex },\n`;
+            (<[string, string, number][]>data).forEach(v1 => {
+                enumIndex = v1[2] || enumIndex;
+                if (v1[1])
+                    enumContent += `\t\t/** ${ v1[1] } */\n\t\t${ v1[0] } = ${ enumIndex },\n`;
                 else
                     enumContent += `\t\t${ v1[0] } = ${ enumIndex },\n`;
                 enumIndex++;
@@ -258,10 +258,10 @@ export class BuildProtoDeclare extends BuildBase {
             let enumIndex = 0;
             let enumNum: string[] = [];
             let enumStr: string[] = [];
-            (<[string, number, string][]>data).forEach(v1 => {
-                enumIndex = v1[1] || enumIndex;
+            (<[string, string, number][]>data).forEach(v1 => {
+                enumIndex = v1[2] || enumIndex;
                 enumNum.push(`\t[${ enumIndex }] = "${ v1[0] }",\n`);
-                if (v1[2]) enumStr.push(`\t---${ v1[2] }\n`);
+                if (v1[1]) enumStr.push(`\t---${ v1[1] }\n`);
                 enumStr.push(`\t${ v1[0] } = ${ enumIndex },\n`);
                 enumIndex++;
             });
