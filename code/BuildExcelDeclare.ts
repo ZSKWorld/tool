@@ -87,7 +87,7 @@ export class BuildExcelDeclare extends BuildBase {
                 });
             }
         });
-        let enumContent = `${ LUA_MODIFY_TIP }\n\n---表名枚举\n---@enum ExcelName\nExcelName = {\n`;
+        let enumContent = `${ LUA_MODIFY_TIP }\n---表名枚举\n---@enum ExcelName\nExcelName = {\n`;
         Object.keys(tableNameMap).forEach(v => {
             enumContent += `\t${ v } = "${ tableNameMap[v] }",\n`
         });

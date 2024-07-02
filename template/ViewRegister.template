@@ -17,4 +17,3 @@ class ViewRegister {
 		const register = uiMgr.registView.bind(uiMgr);#registerCode#}
 }
 export const viewRegister = new ViewRegister();
-windowImmit("viewRegister", viewRegister);

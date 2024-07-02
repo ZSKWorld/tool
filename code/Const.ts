@@ -38,5 +38,5 @@ export const PaiHun_ProtoReplacePath = resolve(__dirname, "../../data/proto_repl
 export const PaiHun_ProtoTsDeclarePath = resolve(__workname, "Lua/LuaScript/Net/proto.d.ts");
 export const PaiHun_ProtoLuaDeclarePath = resolve(__workname, "Lua/LuaScript/Net/ProtoDeclare.lua");
 
-export const TS_MODIFY_TIP = "/** This script is generated automatically, Please do not any modify! */";
-export const LUA_MODIFY_TIP = "---This script is generated automatically, Please do not any modify!";
+export const TS_MODIFY_TIP = "/** This script is generated automatically, Please do not any modify! */\n";
+export const LUA_MODIFY_TIP = "---This script is generated automatically, Please do not any modify!\n";

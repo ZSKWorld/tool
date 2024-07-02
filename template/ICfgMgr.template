@@ -17,5 +17,5 @@ interface CfgExtension<T> {
 }
 
 declare interface ICfgManager {
-#vars#
-}
+	init():void;
+#vars#}
