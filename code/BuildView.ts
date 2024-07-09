@@ -2,13 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
 import { Logger } from "./Console";
-import { BaseProxyPath, BaseViewCtrlPath, ResPathPathNoExt, UiDir, ViewDir, ViewIDPath, ViewRegisterPath } from "./Const";
+import { BaseProxyPath, BaseViewCtrlPath, ResPathPathNoExt, UiDir, ViewDir, ViewIDDeclarePath, ViewIDPath, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir, UpperFirst } from "./Utils";
 export class BuildView extends BuildBase {
     private viewTemplate = GetTemplateContent("View");
     private ctrlTemplate = GetTemplateContent("ViewCtrl");
     private proxyTemplate = GetTemplateContent("ViewProxy");
     private viewIDTemplate = GetTemplateContent("ViewID");
+    private viewIDDeclareTemplate = GetTemplateContent("ViewIDDeclare");
     private viewRegisterTemplate = GetTemplateContent("ViewRegister");
 
     protected buildFilter = [
@@ -56,7 +57,7 @@ export class BuildView extends BuildBase {
                 .replace(/#packageName#/g, pkgName)
                 .replace(/#fileName#/g, filename);
 
-            let [sendContent, compContent, compExtension, imports, messages] = ["", "", "\n", "", ""];
+            let [sendContent, compContent, compExtension, messages] = ["", "", "\n", ""];
 
             const matches = fs.readFileSync(path.resolve(dirPath, filename + ".ts")).toString().match(/public.*:.*;/g);
             const uiComps = matches ? matches.filter(v => !v.includes("static")) : [];
@@ -75,14 +76,11 @@ export class BuildView extends BuildBase {
                     useComps.push(varName);
                 });
 
-                let resPathPath = path.relative(viewDir, ResPathPathNoExt);
-                imports += `import { ResPath } from "${ resPathPath.replace(/\\/g, "/") }";\n`;
                 compContent = useComps.length > 0 ? `const { ${ useComps.join(", ") } } = this;${ sendContent }` : sendContent;
             }
 
             content = content.replace(/#allComp#/g, compContent)
                 .replace(/#messages#/g, messages.trimEnd())
-                .replace(/#imports#/g, imports)
                 .replace(/#compExtension#/g, compExtension.trimEnd());
             console.log(viewCls);
             fs.writeFileSync(viewPath, content);
@@ -211,9 +209,11 @@ export class BuildView extends BuildBase {
     }
 
     private BuildViewID() {
-        let content = this.GetViewIDContent();
-        content = this.viewIDTemplate.replace("#content#", content);
-        fs.writeFileSync(ViewIDPath, content);
+        const content = this.GetViewIDContent();
+        const viewIDContent = this.viewIDTemplate.replace("#content#", content);
+        fs.writeFileSync(ViewIDPath, viewIDContent);
+        const viewIDDeclareContent = this.viewIDDeclareTemplate.replace("#content#", content);
+        fs.writeFileSync(ViewIDDeclarePath, viewIDDeclareContent);
     }
 
     private BuildViewRegister() {
@@ -256,7 +256,6 @@ export class BuildView extends BuildBase {
         addExtAndRegistCode(uiNames, "UIs");
 
         let imports = [
-            `import { ViewID } from "./ViewID";\n`,
             `import { uiMgr } from "./UIManager";\n`,
         ];
         const addImport = (arr: string[], hasDefault: boolean) => {

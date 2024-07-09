@@ -1,7 +1,7 @@
 import { readdirSync, statSync, writeFileSync } from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { ResDir, ResPathPath, TS_MODIFY_TIP } from "./Const";
+import { ResDir, ResPathDeclarePath, ResPathPath, TS_MODIFY_TIP } from "./Const";
 import { UpperFirst } from "./Utils";
 
 interface Config {
@@ -41,9 +41,13 @@ export class BuildResPath extends BuildBase {
         },
     ];
     doBuild() {
-        let content = this.buildResEnum(ResDir, "res/");
-        content = `${ TS_MODIFY_TIP }export namespace ResPath {\n${ content }}`;
-        writeFileSync(ResPathPath, content);
+        const content = this.buildResEnum(ResDir, "res/");
+        const resPathContent = `${ TS_MODIFY_TIP }export namespace ResPath {\n${ content }}`;
+        writeFileSync(ResPathPath, resPathContent);
+        const resPathDeclareContent = resPathContent
+            .replace(new RegExp("export namespace", "g"), "declare namespace")
+            .replace(new RegExp("export enum", "g"), "enum");
+        writeFileSync(ResPathDeclarePath, resPathDeclareContent);
     }
 
     private buildResEnum(dirPath: string, dirName: string, baseContent?: string) {
@@ -88,7 +92,7 @@ export class BuildResPath extends BuildBase {
             if (isPath) content += `\n\t\t${ UpperFirst(fileName) } = "${ dir + (haveExt ? v : fileName) }",`;
             else content += `\n\t\t${ UpperFirst(fileName) } = "${ fileName }",`;
         });
-        if (content) return `\texport const enum ${ name } {${ content }\n\t}\n\n`;
-        else return `\texport const enum ${ name } {}\n\n`;
+        if (content) return `\texport enum ${ name } {${ content }\n\t}\n\n`;
+        else return `\texport enum ${ name } {}\n\n`;
     }
 }
