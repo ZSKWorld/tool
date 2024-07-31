@@ -42,6 +42,7 @@ export class BuildExcelDeclare extends BuildBase {
                 });
                 sheets.forEach(sheet => {
                     const sheetName = sheet.name;
+                    if (!exportTypeMap[sheetName]) return;
                     const sheetUpperName = this.upperFirst(sheetName, ["_"], "");
                     const dataType = `Data_${ tableUpperName }_${ sheetUpperName }`;
                     const tableType = `Table_${ tableUpperName }_${ sheetUpperName }`;
