@@ -38,7 +38,7 @@ export class BuildExcelDeclare extends BuildBase {
                 //导出类型映射
                 const exportTypeMap: { [tableName: string]: { exportKey: string, exportType: ExportType, exportComment: string } } = {};
                 exportSheet?.data.forEach((v, i) => {
-                    exportTypeMap[v[0]] = { exportKey: v[1], exportType: v[2] as ExportType, exportComment: v[3] ? v[3].replace(new RegExp("\n", "g"), "。") : "" };
+                    exportTypeMap[v[0]] = { exportKey: v[1] || "string", exportType: v[2] as ExportType, exportComment: v[3] ? v[3].replace(new RegExp("\n", "g"), "。") : "" };
                 });
                 sheets.forEach(sheet => {
                     const sheetName = sheet.name;

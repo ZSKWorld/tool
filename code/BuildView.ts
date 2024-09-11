@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
 import { Logger } from "./Console";
-import { BaseProxyPath, BaseViewCtrlPath, ResPathPathNoExt, UiDir, ViewDir, ViewIDDeclarePath, ViewIDPath, ViewRegisterPath } from "./Const";
+import { BaseProxyPath, BaseViewCtrlPath, UiDir, ViewDir, ViewIDDeclarePath, ViewIDPath, ViewRegisterPath } from "./Const";
 import { GetAllFile, GetTemplateContent, MakeDir, UpperFirst } from "./Utils";
 export class BuildView extends BuildBase {
     private viewTemplate = GetTemplateContent("View");
@@ -132,6 +132,7 @@ export class BuildView extends BuildBase {
     }
 
     private BuildProxy(dirPath: string, filename: string, subDir: string) {
+        return;
         const _ctrlDir = path.resolve(ViewDir, path.basename(dirPath) + "/controller/" + subDir);
         const _proxyDir = path.resolve(ViewDir, path.basename(dirPath) + "/proxy/" + subDir);
         MakeDir(_proxyDir);
@@ -153,8 +154,7 @@ export class BuildView extends BuildBase {
 
     private RemoveUnused() {
         GetAllFile(
-            ViewDir,
-            true,
+            ViewDir, true,
             filename => filename.endsWith("View.ts") || filename.endsWith("Ctrl.ts") || filename.endsWith("Proxy.ts")
         ).forEach(filepath => {
             const relative = path.relative(ViewDir, filepath);
@@ -222,32 +222,42 @@ export class BuildView extends BuildBase {
         const filterFunc = (start: string, end: string) => (fileName: string) => (!start || fileName.startsWith(start)) && (!end || fileName.endsWith(end));
 
         const binderNames = GetAllFile(UiDir, true, filterFunc("", "Binder.ts"), mapFunc);
-
         const uiNames = GetAllFile(UiDir, true, filterFunc("UI", ".ts"), mapFunc);
         const btnNames = GetAllFile(UiDir, true, filterFunc("Btn", ".ts"), mapFunc);
         const comNames = GetAllFile(UiDir, true, filterFunc("Com", ".ts"), mapFunc);
         const renderNames = GetAllFile(UiDir, true, filterFunc("Render", ".ts"), mapFunc);
 
-        const uiViewNames = GetAllFile(ViewDir, true, filterFunc("UI", ".ts"), mapFunc);
-        const btnViewNames = GetAllFile(ViewDir, true, filterFunc("Btn", ".ts"), mapFunc);
-        const comViewNames = GetAllFile(ViewDir, true, filterFunc("Com", ".ts"), mapFunc);
-        const renderViewNames = GetAllFile(ViewDir, true, filterFunc("Render", ".ts"), mapFunc);
+        let [binderCode, registerCode, imports] = ["", "", []];
 
-        const ctrlNames = GetAllFile(ViewDir, true, filterFunc("", "Ctrl.ts"), mapFunc);
-        const proxyNames = GetAllFile(ViewDir, true, filterFunc("", "Proxy.ts"), mapFunc);
-
-        let [binderCode, registerCode] = ["", ""];
         binderNames.forEach(v => {
             const basename = path.basename(v);
             binderCode += `\t\t${ basename }.bindAll();\n`
+            imports.push(`import ${ basename } from "${ path.relative(viewRegisterDir, v).replace(/\\/g, "/") }";`);
         });
+
+        const subDirMap = { Btns: "btns\\", Renders: "renders\\", Coms: "coms\\", UIs: "" };
         const addExtAndRegistCode = (arr: string[], desc: string) => {
             registerCode += `\n\t\t//${ desc }\n`;
             arr.forEach(v => {
                 const basename = path.basename(v);
-                let proxyName = basename + "Proxy";
-                proxyName = proxyNames.find(v1 => v1.endsWith(proxyName)) ? ", " + proxyName : "";
-                registerCode += `\t\tregister(ViewID.${ basename }View, ${ basename }View, ${ basename + "Ctrl" }${ proxyName });\n`;
+                const tempPath = v.replace("ui\\Pkg", "view\\Pkg");
+                const viewPath = tempPath.replace(basename, "view\\" + subDirMap[desc] + basename + "View.ts");
+                const ctrlPath = tempPath.replace(basename, "controller\\" + subDirMap[desc] + basename + "Ctrl.ts");
+                const proxyPath = tempPath.replace(basename, "proxy\\" + subDirMap[desc] + basename + "Proxy.ts");
+                registerCode += `\t\tregister(ViewID.${ basename }View`;
+                if (fs.existsSync(viewPath)) {
+                    registerCode += ", " + basename + "View";
+                    imports.push(`import { ${ basename }View } from "${ path.relative(viewRegisterDir, mapFunc(viewPath)).replace(/\\/g, "/") }";`);
+                }
+                if (fs.existsSync(ctrlPath)) {
+                    registerCode += ", " + basename + "Ctrl";
+                    imports.push(`import { ${ basename }Ctrl } from "${ path.relative(viewRegisterDir, mapFunc(ctrlPath)).replace(/\\/g, "/") }";`);
+                }
+                if (fs.existsSync(proxyPath)) {
+                    registerCode += ", " + basename + "Proxy";
+                    imports.push(`import { ${ basename }Proxy } from "${ path.relative(viewRegisterDir, mapFunc(proxyPath)).replace(/\\/g, "/") }";`);
+                }
+                registerCode += ");\n";
             });
         }
         addExtAndRegistCode(btnNames, "Btns");
@@ -255,28 +265,10 @@ export class BuildView extends BuildBase {
         addExtAndRegistCode(comNames, "Coms");
         addExtAndRegistCode(uiNames, "UIs");
 
-        let imports = [
-            `import { uiMgr } from "./UIManager";\n`,
-        ];
-        const addImport = (arr: string[], hasDefault: boolean) => {
-            arr.forEach(v => {
-                const basename = path.basename(v);
-                imports.push(`import ${ hasDefault ? "{ " : "" }${ basename } ${ hasDefault ? "} " : "" }from "${ path.relative(viewRegisterDir, v).replace(/\\/g, "/") }";\n`);
-            });
-        }
-        addImport(binderNames, false);
-        // addImport(uiNames, false);
-        // addImport(btnNames, false);
-        // addImport(comNames, false);
-        // addImport(renderNames, false);
-
-        addImport(uiViewNames, true);
-        addImport(btnViewNames, true);
-        addImport(comViewNames, true);
-        addImport(renderViewNames, true);
+        imports.push(`import { uiMgr } from "./UIManager";`);
 
         let content = this.viewRegisterTemplate
-            .replace("#import#", imports.sort().join(""))
+            .replace("#import#", imports.join("\n"))
             .replace("#binderCode#", binderCode + "\t")
             .replace("#registerCode#", registerCode + "\t");
         content = content.replace("#ViewIDContent#", this.GetViewIDContent());
