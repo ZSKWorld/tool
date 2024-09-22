@@ -265,8 +265,6 @@ export class BuildView extends BuildBase {
         addExtAndRegistCode(comNames, "Coms");
         addExtAndRegistCode(uiNames, "UIs");
 
-        imports.push(`import { uiMgr } from "./UIManager";`);
-
         let content = this.viewRegisterTemplate
             .replace("#import#", imports.join("\n"))
             .replace("#binderCode#", binderCode + "\t")
