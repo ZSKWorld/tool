@@ -1,16 +1,17 @@
 import * as fs from "fs";
 import * as path from "path";
 import { BuildBase } from "./BuildBase";
-import { CMDInterfaceDir, NetCMDPath, NetNotifyPath, NotifyInterfaceDir, ServicesPath, TS_MODIFY_TIP } from "./Const";
+import { CMDInterfaceDir, NetCMDPath, NetNotifyPath, NetServiceDeclarePath, NetServicePath, NotifyInterfaceDir, TS_MODIFY_TIP } from "./Const";
 import { GetTemplateContent, UpperFirst } from "./Utils";
 export class BuildNet extends BuildBase {
     private _allCMDCtrls: { [key: string]: string[] } = {};
     private _allNotifyCtrls: { [key: string]: string[] } = {};
-    private _servicesTemp = GetTemplateContent("Services");
+    private _serviceTemp = GetTemplateContent("Services");
+    private _serviceDeclareTemp = GetTemplateContent("ServicesDeclare");
     doBuild() {
         this.getAllCMDController();
         this.buildNetCMD();
-        this.buildServices();
+        this.buildService();
 
         this.getAllNotifyController();
         this.buildNetNotify();
@@ -68,20 +69,17 @@ export class BuildNet extends BuildBase {
         fs.writeFileSync(NetCMDPath, data);
     }
 
-    private buildServices() {
-        let content = "";
-        let serviceKeys = "";
+    private buildService() {
+        const serviceKeys: string[] = [];
+        const netServiceDeclareInterfaces: string[] = [];
         Object.keys(this._allCMDCtrls).forEach(v => {
-            const name = v.substring(1) + "Service";
-            content += `export const ${ name.replace("Ctrl", "") } = ServiceInst<${ v }>();\n`;
-            this._allCMDCtrls[v].forEach(func => {
-                serviceKeys += `"${ func.substring(0, func.indexOf("(")) }", `;
-            });
+            netServiceDeclareInterfaces.push(v);
+            this._allCMDCtrls[v].forEach(func => serviceKeys.push(`"${ func.substring(0, func.indexOf("(")) }"`));
         });
-        const data = this._servicesTemp
-            .replace(/#content#/g, content)
-            .replace(/#serviceKeys#/g, serviceKeys.trim());
-        fs.writeFileSync(ServicesPath, data.trim());
+        const netService = this._serviceTemp.replace(/#serviceKeys#/g, serviceKeys.join(", "));
+        fs.writeFileSync(NetServicePath, netService.trim());
+        const netServiceDeclare = this._serviceDeclareTemp.replace(/#interfaces#/g, netServiceDeclareInterfaces.join(", "));
+        fs.writeFileSync(NetServiceDeclarePath, netServiceDeclare);
     }
 
     private getAllNotifyController() {
