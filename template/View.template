@@ -5,7 +5,7 @@ export const enum #fileName#Msg {
 }
 
 export class #className# extends ExtensionClass<IView, #fileName#>(#fileName#) {
-    static readonly PkgRes = ResPath.PkgPath.#packageName#;
+    static readonly pkgRes = ResPath.PkgPath.#packageName#;
 
 	override onCreate() {
         #allComp#
